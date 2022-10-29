@@ -1,62 +1,74 @@
 import sqlite3
-import logging
 from sqlite3 import Cursor
 
-from typing import Any
 
+class DbPdlnMpv:
 
-def connect(db: str):
-    return sqlite3.connect(db)
+    ''' Sqlite Pdlnmpv '''
 
-def create_db(cursor: Cursor, db_name: str) -> Cursor:
-    return cursor.execute(f'CREATE TABLE IF NOT EXISTS {db_name} (id integer NOT NULL PRIMARY KEY AUTOINCREMENT, title text NOT NULL, watched bool NOT NULL)')
+    def __init__(self, table_name: str, db_file: str):
+        self._table = table_name
+        self._db = db_file
+        self.conn = sqlite3.connect(self._db)
+        self.cursor = self.conn.cursor()
 
-def create(cursor: Cursor, db_name: str, title: str, watched: int) -> Cursor:
-    return cursor.execute(f'INSERT INTO {db_name} (title, watched) VALUES ("{title}", "{watched}")')
+        self.create_db()
 
-def read_all_unwatched(cursor: Cursor, db_name: str) -> None:
-    for row in cursor.execute(f'SELECT * FROM "{db_name}" WHERE watched = 0'):
-        _id = row[0]
-        title = row[1]
-        print(f'{title} - {_id}')
-
-def read_one(cursor: Cursor, db_name: str, id: int, title: str) -> None:
-    if id is not None:
-        row = cursor.execute(f'SELECT id, title FROM "{db_name}" WHERE id = {id}').fetchone()
-        _id = row[0]
-        title = row[1]
-        print(f'{title} - {_id}')
-    elif title is not None:
-        row = cursor.execute(f'SELECT id, title FROM "{db_name}" WHERE title = "{title}"').fetchone()
-        _id = row[0]
-        title = row[1]
-        print(f'{title} - {_id}')
-    else:
-        print('You need to pass a filter!')
-
-if __name__ == '__main__':
-
-    dbfile = 'anime.db'
-    db_name = 'animeplaylist'
-    db = connect(dbfile)
-    cursor = db.cursor()
-    cursor = create_db(cursor, db_name)
-    titles = [
-        '[ASW] Noumin Kanren no Skill bakka Agetetara Nazeka Tsuyoku Natta - 05 [1080p HEVC][5870F24D].mkv',
-        '[ASW]  bakka Agetetara Nazeka Tsuyoku Natta - 05 [1080p HEVC][5870F24D].mkv',
-        '[ASW] Noumin Kanren no Skill bakka Agetetara 80p HEVC][5870F24D].mkv',
-        '[ASW] Noumin Kanren no Skill yoku Natta - 05 [1080p HEVC][5870F24D].mkv',
-        '[ASW] Noumiazeka Tsuyoku Natta - 05 [1080p HEVC][5870F24D].mkv',
-        '[ASW] Noumin Kanren no Skill bak24D].mkv',
-        ]
+    def create_db(self) -> Cursor:
+        return self.cursor.execute(
+            f'''
+                CREATE TABLE IF NOT EXISTS {self._table}
+                (id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+                title text NOT NULL,
+                watched bool NOT NULL)
+            '''
+        )
     
-    #for title in titles:
-    #    cursor = create(cursor=cursor,
-    #                    db_name=dbname,
-    #                    title=title,
-    #                    watched=0)
-    #read(cursor, dbname)
-    read_one(cursor, db_name, id=4, title=None)
-    read_one(cursor, db_name, id=None, title='[ASW] Noumin Kanren no Skill yoku Natta - 05 [1080p HEVC][5870F24D].mkv')
-    db.commit()
-    db.close()
+    def create(self, title: str, watched: int, commit=True) -> None:
+        _exec = self.cursor.execute(
+            f'''
+                INSERT INTO {self._table}
+                (title, watched)
+                VALUES ("{title}", {watched})
+            '''
+        )
+        if commit:
+            self.commit()
+    
+    def read_all(self, watched: int) -> None:
+        '''
+            watched: int = 0 or 1
+        '''
+        for row in self.cursor.execute(
+            f'''SELECT * FROM "{self._table}"
+            WHERE watched = {watched}'''):
+            _id: int = row[0]
+            title: str = row[1]
+            print(f'{title} - {_id}')
+
+    def read_one(self, id: int) -> None:
+        row = self.cursor.execute(
+            f'''SELECT id, title FROM "{self._table}"
+            WHERE id = {id}''').fetchone()
+        _id: int = row[0]
+        title: str = row[1]
+        print(f'{title} - {_id}')
+
+    def update_one(self, watched: int, id: int, commit=True) -> None:
+        '''
+            watched: int = 0 or 1
+        '''
+        _exec = self.cursor.execute(
+            f'''UPDATE {self._table}
+            SET watched = {watched}
+            WHERE id = {id}''')
+        if commit:
+            self.commit()
+
+    def commit(self) -> None:
+        ''' Commits to the database '''
+        return self.conn.commit()
+    
+    def close(self) -> None:
+        ''' Closes the database connection '''
+        return self.conn.close()
