@@ -1,5 +1,4 @@
 import sqlite3
-from sqlite3 import Cursor
 
 
 class DbPdlnMpv:
@@ -14,8 +13,8 @@ class DbPdlnMpv:
 
         self.create_db()
 
-    def create_db(self) -> Cursor:
-        return self.cursor.execute(
+    def create_db(self) -> None:
+        self.cursor.execute(
             f'''
                 CREATE TABLE IF NOT EXISTS {self._table}
                 (id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
