@@ -34,7 +34,7 @@ class DbPlMpv:
         if commit:
             self.commit()
 
-    def update(self, watched: int, id: int, commit=True) -> None:
+    def update(self, id: int, watched: int, commit=True) -> None:
         '''
             watched: int = 0 or 1
         '''

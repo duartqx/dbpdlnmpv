@@ -26,7 +26,8 @@ def main(db_file, table, id, watched, title, create, read, update):
     checker = sum([create, read, update])
     if not checker or checker > 1:
         raise UsageError(
-            'Illegal usage: One of --create, --read and --update is required but they are mutually exclusive.'
+            'Illegal usage: One of --create, --read and --update is '
+            'required but they are mutually exclusive.'
             )
 
     # Database connection
@@ -47,7 +48,7 @@ def main(db_file, table, id, watched, title, create, read, update):
             if not id:
                 raise UsageError('--id is required')
             else:
-                db.update(watched, id)
+                db.update(id, watched)
 
 
 if __name__ == '__main__':
