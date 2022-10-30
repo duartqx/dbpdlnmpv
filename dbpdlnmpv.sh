@@ -1,6 +1,10 @@
-#!/usr/share/env bash
+#!/usr/bin/env bash
 
-DB_FILE="--db_file '/home/duartqx/.local/share/playlists.db'"
+DBCREATOR="$HOME/.local/bin/repos/dbpdlnmpv/create.py"
+DBUPDATER="$HOME/.local/bin/repos/dbpdlnmpv/update.py"
+DBREADER="$HOME/.local/bin/repos/dbpdlnmpv/read.py"
+DB_FILE="--db_file /home/duartqx/.local/share/playlists.db"
+
 if [[ $1 == '--table' ]]; then
     if [[ -z $2 ]]; then
         echo 'Missing argument'; exit 1
@@ -17,15 +21,17 @@ case $1 in
         if [[ -z "$2" ]]; then
             echo 'Missing argument'; exit 1
         fi
-        dbpdlnmpv_create $DB_FILE $TABLE_NAME --title "$2" ;;
+        echo "$2"
+        $DBCREATOR $DB_FILE $TABLE_NAME --title "$2" ;;
     "-u"|"--update")
         if [[ -z "$2" ]]; then
             echo 'Missing argument'; exit 1
         fi
-        dbpdlnmpv_update $DB_FILE $TABLE_NAME --id "$2" ;;
+        $DBUPDATER $DB_FILE $TABLE_NAME --id "$2" ;;
     "-r"|"--read")
         if [[ -z "$2" ]]; then
-            dbpdlnmpv_read $DB_FILE $TABLE_NAME --id "$2" ;;
-        fi
-            dbpdlnmpv_read $DB_FILE $TABLE_NAME ;;
+            $DBREADER $DB_FILE $TABLE_NAME --id "$2"
+        else
+            $DBREADER $DB_FILE $TABLE_NAME
+        fi ;;
 esac

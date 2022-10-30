@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class DbPdlnMpv:
+class DbPlMpv:
 
     ''' Sqlite Pdlnmpv '''
 

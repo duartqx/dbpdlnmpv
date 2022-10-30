@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from dbpdlnmpv import DbPdlnMpv
+from dbplmpv import DbPlMpv
 from sys import argv, exit as _exit
 
 if __name__ == '__main__':
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         _exit(1)
 
     # Connects to database
-    db = DbPdlnMpv(table_name, db_file)
+    db = DbPlMpv(table_name, db_file)
 
     # Updates
     db.update_one(watched, _id)
