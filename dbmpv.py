@@ -47,7 +47,7 @@ def main(db_file, table, id, watched, title, create, read, update):
             if not id:
                 raise UsageError('--id is required')
             else:
-                db.update_one(watched, id)
+                db.update(watched, id)
 
 
 if __name__ == '__main__':

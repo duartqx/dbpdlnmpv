@@ -33,6 +33,17 @@ class DbPlMpv:
         )
         if commit:
             self.commit()
+
+    def update(self, watched: int, id: int, commit=True) -> None:
+        '''
+            watched: int = 0 or 1
+        '''
+        _exec = self.cursor.execute(
+            f'''UPDATE {self._table}
+            SET watched = {watched}
+            WHERE id = {id}''')
+        if commit:
+            self.commit()
     
     def read_all(self, watched: int) -> None:
         '''
@@ -52,17 +63,6 @@ class DbPlMpv:
         _id: int = row[0]
         title: str = row[1]
         print(f'{title} - {_id}')
-
-    def update_one(self, watched: int, id: int, commit=True) -> None:
-        '''
-            watched: int = 0 or 1
-        '''
-        _exec = self.cursor.execute(
-            f'''UPDATE {self._table}
-            SET watched = {watched}
-            WHERE id = {id}''')
-        if commit:
-            self.commit()
 
     def commit(self) -> None:
         ''' Commits to the database '''
