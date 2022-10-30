@@ -23,9 +23,9 @@ class DbPlMpv:
                 deleted bool NOT NULL DEFAULT 0)
             '''
         )
-    
+
     def create(self, title: str, watched: int, commit=True) -> None:
-        _exec = self.cursor.execute(
+        self.cursor.execute(
             f'''
                 INSERT INTO {self._table}
                 (title, watched)
@@ -39,23 +39,30 @@ class DbPlMpv:
         '''
             watched: int = 0 or 1
         '''
-        _exec = self.cursor.execute(
-            f'''UPDATE {self._table}
-            SET watched = {watched}
-            WHERE id = {id}''')
+        self.cursor.execute(
+            f'''
+                UPDATE {self._table}
+                SET watched = {watched}
+                WHERE id = {id}
+            '''
+        )
         if commit:
             self.commit()
-    
-    def read_filtered(self, watched: int, p: bool=True
-                     ) -> list[dict[str, int | str]]:
+
+    def read_filtered(self, watched: int, p: bool = True
+                      ) -> list[dict[str, int | str]]:
         '''
             watched: int = 0 or 1
         '''
         rows: list[tuple[int, str]] = []
         for row in self.cursor.execute(
-            f'''SELECT id, title FROM "{self._table}"
-            WHERE watched = {watched}
-            AND deleted = 0'''):
+            f'''
+                SELECT id, title
+                FROM "{self._table}"
+                WHERE watched = {watched}
+                AND deleted = 0
+            '''
+        ):
             _id: int = row[0]
             title: str = row[1]
             if p:
@@ -63,12 +70,18 @@ class DbPlMpv:
             rows.append({'id': _id, 'title': title})
         return rows
 
-    def read_all(self, nostate: bool=False, p: bool=True
-                ) -> list[dict[str, int | str]]:
+    def read_all(self, nostate: bool = False, p: bool = True
+                 ) -> list[dict[str, int | str]]:
+
         rows: list[tuple[int, str]] = []
+
         for row in self.cursor.execute(
-            f'''SELECT id, title, watched FROM "{self._table}"
-            WHERE deleted = 0'''):
+            f'''
+                SELECT id, title, watched
+                FROM "{self._table}"
+                WHERE deleted = 0
+            '''
+        ):
             _id: int = row[0]
             title: str = row[1]
             watched: int = row[2]
@@ -81,11 +94,17 @@ class DbPlMpv:
             rows.append({'id': _id, 'title': title})
         return rows
 
-    def read_one(self, id: int, p: bool=True
-                ) -> list[dict[str, int | str]]:
+    def read_one(self, id: int, p: bool = True
+                 ) -> list[dict[str, int | str]]:
+
         row = self.cursor.execute(
-            f'''SELECT id, title FROM "{self._table}"
-            WHERE id = {id}''').fetchone()
+            f'''
+                SELECT id, title
+                FROM "{self._table}"
+                WHERE id = {id}
+            '''
+        ).fetchone()
+
         if row:
             _id: int = row[0]
             title: str = row[1]
@@ -96,18 +115,21 @@ class DbPlMpv:
             print('Error: Not found')
             return [{'id': 0, 'title': ''}]
 
-
     def delete(self, ids: list[int]) -> None:
         for _id in ids:
             self.cursor.execute(
-                f'UPDATE {self._table} '
-                f'SET deleted = 1 WHERE id = {_id}')
+                f'''
+                    UPDATE {self._table}
+                    SET deleted = 1
+                    WHERE id = {_id}
+                '''
+            )
         self.commit()
 
     def commit(self) -> None:
         ''' Commits to the database '''
         return self.conn.commit()
-    
+
     def close(self) -> None:
         ''' Closes the database connection '''
         return self.conn.close()

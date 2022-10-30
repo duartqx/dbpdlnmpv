@@ -16,7 +16,7 @@ Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
 case "$Choice" in
     Watch)
-        Watch_choice=$(dbmpv $TABLE_NAME --read | dmenu -l 10)
+        Watch_choice=$(dbmpv $TABLE_NAME --read | dmenu -l 20)
         [[ -z $Watch_choice ]] && exit
         Filename=${Watch_choice#*- }
         _id=${Watch_choice%%-*} # Removes everything and leaves only the id
@@ -34,7 +34,7 @@ case "$Choice" in
             Unwatched)
                 WBool=0 ;;
         esac
-        What_entry_to_update=$(dbmpv $TABLE_NAME --readall | dmenu -l 10)
+        What_entry_to_update=$(dbmpv $TABLE_NAME --readall | dmenu -l 20)
         [[ -z $What_entry_to_update ]] && exit
         _id=${What_entry_to_update%%-*} # Removes everything and leaves only the id
         dbmpv $TABLE_NAME --update --id "$_id" --watched $WBool
@@ -42,7 +42,7 @@ case "$Choice" in
         dbanimeplaylist
     ;;
     Watched)
-        Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 | dmenu -l 10)
+        Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 | dmenu -l 20)
         [[ -z $Watch_choice ]] && exit
     ;;
     Add)

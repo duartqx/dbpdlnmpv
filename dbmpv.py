@@ -37,8 +37,9 @@ def main(db_file: str, table: str, id: int,
         ])
     if not checker or checker > 1:
         raise UsageError(
-            'Illegal usage: One of --create, --read and --update is '
-            'required but they are mutually exclusive.'
+            'Illegal usage: One of --create, --read, --readall, '
+            '--update or --delete is required '
+            'but they are mutually exclusive.'
             )
 
     # Database connection
