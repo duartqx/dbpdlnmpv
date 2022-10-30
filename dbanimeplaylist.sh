@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2086
 
 DMENU_OPTIONS='Watch
 Update
@@ -16,12 +17,13 @@ Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 case "$Choice" in
     Watch)
         Watch_choice=$(dbmpv $TABLE_NAME --read | dmenu -l 10)
+        [[ -z $Watch_choice ]] && exit
         Filename=${Watch_choice#*- }
         _id=${Watch_choice%%-*} # Removes everything and leaves only the id
         cd "$WATCH_FOLDER" || exit
         mpv --fs "$Filename"
         # Sets the file to watched
-        dbmpv "$TABLE_NAME" --update --id "$_id" --watched 1
+        dbmpv $TABLE_NAME --update --id "$_id" --watched 1
     ;;
     Update)
         Update_choice=$(echo -e "Watched\nUnwatched" | dmenu -i -p "Update to what state? ")
@@ -33,15 +35,18 @@ case "$Choice" in
                 WBool=0 ;;
         esac
         What_entry_to_update=$(dbmpv $TABLE_NAME --readall | dmenu -l 10)
+        [[ -z $What_entry_to_update ]] && exit
         _id=${What_entry_to_update%%-*} # Removes everything and leaves only the id
         dbmpv $TABLE_NAME --update --id "$_id" --watched $WBool
         notify-send "Changed file state to $Update_choice"
+        dbanimeplaylist
     ;;
     Watched)
         Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 | dmenu -l 10)
+        [[ -z $Watch_choice ]] && exit
     ;;
     Add)
         CLIP=$(xclip -selection clipboard -o 2>/dev/null)
-        dbmpv "$TABLE_NAME" --create "$CLIP"
+        dbmpv $TABLE_NAME --create "$CLIP"
     ;;
 esac
