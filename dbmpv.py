@@ -2,10 +2,11 @@
 from click import command, option, UsageError
 from dbplmpv import DbPlMpv
 from os import environ
-from sys import exit as _exit
+from pathlib import Path
 
 
 HOME = environ.get('HOME')
+PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
 
 
 @command()
@@ -13,17 +14,27 @@ HOME = environ.get('HOME')
         default=f"{HOME}/.local/share/playlists.db",
         help="The sqlite db file")
 @option("--table",
-        prompt="What is the table name?", 
+        prompt="What is the table name",
         help="The table that you want to read")
 @option("--id", default=None, help="The id of the row.")
 @option("--watched", default=0, help="Boolean 0 or 1")
-@option("--title", default=None, help="Title of a row")
-@option("--create", is_flag=True, help="Create option")
+@option("--create", help="Create option")
 @option("--read", is_flag=True, help="Read option")
+@option("--readall", is_flag=True, help="Read all option")
 @option("--update", is_flag=True, help="Update option")
-def main(db_file, table, id, watched, title, create, read, update):
+@option("--nostate", is_flag=True, help="Read only the title option")
+@option("--delete", help="Change state to deleted")
+def main(db_file: str, table: str, id: int,
+         watched: int, create: str, read: bool,
+         readall: bool, update: bool, nostate: bool, delete: str):
 
-    checker = sum([create, read, update])
+    checker = sum([
+        bool(create),
+        bool(read),
+        bool(readall),
+        bool(update),
+        bool(delete),
+        ])
     if not checker or checker > 1:
         raise UsageError(
             'Illegal usage: One of --create, --read and --update is '
@@ -34,21 +45,30 @@ def main(db_file, table, id, watched, title, create, read, update):
     db = DbPlMpv(table, db_file)
 
     with db.conn:
+
+        # Clean up deleted files
+        db.delete([
+            row["id"] for row in db.read_filtered(watched=0, p=False)
+            if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
+        ])
+
         if read:
             if id:
                 db.read_one(id)
             else:
-                db.read_all(watched)
-        elif create:
-            if not title:
-                raise UsageError('--title is required')
+                db.read_one(watched)
+        elif readall:
+            if nostate:
+                db.read_all(nostate=True)
             else:
-                db.create(title, watched)
+                db.read_all()
         elif update:
             if not id:
                 raise UsageError('--id is required')
             else:
                 db.update(id, watched)
+        elif create:
+            db.create(create, watched)
 
 
 if __name__ == '__main__':

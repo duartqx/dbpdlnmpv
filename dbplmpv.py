@@ -19,7 +19,8 @@ class DbPlMpv:
                 CREATE TABLE IF NOT EXISTS {self._table}
                 (id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
                 title text NOT NULL,
-                watched bool NOT NULL)
+                watched bool NOT NULL,
+                deleted bool NOT NULL DEFAULT 0)
             '''
         )
     
@@ -45,24 +46,57 @@ class DbPlMpv:
         if commit:
             self.commit()
     
-    def read_all(self, watched: int) -> None:
+    def read_filtered(self, watched: int, p: bool=True
+                     ) -> list[dict[str, int | str]]:
         '''
             watched: int = 0 or 1
         '''
+        rows: list[tuple[int, str]] = []
         for row in self.cursor.execute(
-            f'''SELECT * FROM "{self._table}"
-            WHERE watched = {watched}'''):
+            f'''SELECT id, title FROM "{self._table}"
+            WHERE watched = {watched}
+            AND deleted = 0'''):
             _id: int = row[0]
             title: str = row[1]
-            print(f'{title} - {_id}')
+            if p:
+                print(f'{_id} - {title}')
+            rows.append({'id': _id, 'title': title})
+        return rows
 
-    def read_one(self, id: int) -> None:
+    def read_all(self, nostate: bool=False, p: bool=True
+                ) -> list[dict[str, int | str]]:
+        rows: list[tuple[int, str]] = []
+        for row in self.cursor.execute(
+            f'''SELECT id, title, watched FROM "{self._table}"
+            WHERE deleted = 0'''):
+            _id: int = row[0]
+            title: str = row[1]
+            watched: int = row[2]
+            if p:
+                if not nostate:
+                    print(f'{_id} - {title} '
+                          f'[{"watched" if watched else "unwatched"}]')
+                else:
+                    print(f'{_id} - {title}')
+            rows.append({'id': _id, 'title': title})
+        return rows
+
+    def read_one(self, id: int, p: bool=True
+                ) -> list[dict[str, int | str]]:
         row = self.cursor.execute(
             f'''SELECT id, title FROM "{self._table}"
             WHERE id = {id}''').fetchone()
         _id: int = row[0]
         title: str = row[1]
-        print(f'{title} - {_id}')
+        if p:
+            print(f'{_id} - {title}')
+        return [{'id': _id, 'title': title}]
+
+    def delete(self, ids: list[int]) -> None:
+        for _id in ids:
+            self.cursor.execute(
+                f'UPDATE {self._table} '
+                f'SET deleted = 1 WHERE id = {_id}')
 
     def commit(self) -> None:
         ''' Commits to the database '''
