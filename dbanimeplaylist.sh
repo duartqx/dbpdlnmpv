@@ -11,18 +11,6 @@ WATCH_FOLDER="$HOME/Media/Videos"
 
 Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
-checkIfDeleted() {
-    allFiles=$(dbmpv $TABLE_NAME --read)
-    while IFS= read -r file; do
-        if [[ -z $(ls "$WATCH_FOLDER/${file#*- }" 2>/dev/null) ]]; then
-            deletedFiles="$deletedFiles ${file%% -*}"
-        fi
-    done <<< "$allFiles"
-    dbmpv $TABLE_NAME --deleted "$deletedFiles"
-}
-
-checkIfDeleted
-
 [[ -z $Choice ]] && exit
 
 case "$Choice" in
