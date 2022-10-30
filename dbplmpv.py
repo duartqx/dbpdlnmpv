@@ -86,17 +86,23 @@ class DbPlMpv:
         row = self.cursor.execute(
             f'''SELECT id, title FROM "{self._table}"
             WHERE id = {id}''').fetchone()
-        _id: int = row[0]
-        title: str = row[1]
-        if p:
-            print(f'{_id} - {title}')
-        return [{'id': _id, 'title': title}]
+        if row:
+            _id: int = row[0]
+            title: str = row[1]
+            if p:
+                print(f'{_id} - {title}')
+            return [{'id': _id, 'title': title}]
+        else:
+            print('Error: Not found')
+            return [{'id': 0, 'title': ''}]
+
 
     def delete(self, ids: list[int]) -> None:
         for _id in ids:
             self.cursor.execute(
                 f'UPDATE {self._table} '
                 f'SET deleted = 1 WHERE id = {_id}')
+        self.commit()
 
     def commit(self) -> None:
         ''' Commits to the database '''

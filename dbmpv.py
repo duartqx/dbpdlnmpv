@@ -56,7 +56,7 @@ def main(db_file: str, table: str, id: int,
             if id:
                 db.read_one(id)
             else:
-                db.read_one(watched)
+                db.read_filtered(watched)
         elif readall:
             if nostate:
                 db.read_all(nostate=True)
