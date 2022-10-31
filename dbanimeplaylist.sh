@@ -26,7 +26,7 @@ case "$Choice" in
         dbmpv $TABLE_NAME --update --id "$_id" --watched 1
     ;;
     Update)
-        Update_choice=$(echo -e "Watched\nUnwatched" | dmenu -i -p "Update to what state? ")
+        Update_choice=$(echo -e "Watched\nUnwatched" | dmenu -i -p "Update status to:")
         [[ -z $Update_choice ]] && exit
         case "$Update_choice" in
             Watched)
