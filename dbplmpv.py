@@ -80,6 +80,7 @@ class DbPlMpv:
                 SELECT id, title, watched
                 FROM "{self._table}"
                 WHERE deleted = 0
+                ORDER BY id DESC
             '''
         ):
             _id: int = row[0]
