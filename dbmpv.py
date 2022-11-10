@@ -23,10 +23,12 @@ PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
 @option("--readall", is_flag=True, help="Read all option")
 @option("--update", is_flag=True, help="Update option")
 @option("--nostate", is_flag=True, help="Read only the title option")
+@option("--desc", is_flag=True, help="Descrescent flag")
 @option("--delete", help="Change state to deleted")
 def main(db_file: str, table: str, id: int,
          watched: int, create: str, read: bool,
-         readall: bool, update: bool, nostate: bool, delete: str):
+         readall: bool, update: bool, nostate: bool,
+         desc:bool, delete: str) -> None:
 
     checker = sum([
         bool(create),
@@ -49,13 +51,15 @@ def main(db_file: str, table: str, id: int,
 
         # Clean up deleted files
         db.delete([
-            row["id"] for row in db.read_filtered(watched=0, p=False)
+            int(row["id"]) for row in db.read_filtered(watched=0, p=False)
             if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
         ])
 
         if read:
             if id:
                 db.read_one(id)
+            elif desc:
+                db.read_filtered(watched, desc=True)
             else:
                 db.read_filtered(watched)
         elif readall:

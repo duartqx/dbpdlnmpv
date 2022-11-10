@@ -40,7 +40,7 @@ case "$Choice" in
         dbanimeplaylist
     ;;
     Watched)
-        Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 | dmenu -l 20)
+        Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 --desc | dmenu -l 20)
         [[ -z $Watch_choice ]] && exit
     ;;
     Add)

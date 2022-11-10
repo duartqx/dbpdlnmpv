@@ -49,20 +49,21 @@ class DbPlMpv:
         if commit:
             self.commit()
 
-    def read_filtered(self, watched: int, p: bool = True
+    def read_filtered(self, watched: int, desc: bool = False, p: bool = True
                       ) -> list[dict[str, int | str]]:
         '''
             watched: int = 0 or 1
         '''
-        rows: list[tuple[int, str]] = []
-        for row in self.cursor.execute(
-            f'''
+        rows: list[dict[str, int | str]] = []
+        q = f'''
                 SELECT id, title
                 FROM "{self._table}"
                 WHERE watched = {watched}
                 AND deleted = 0
             '''
-        ):
+        if desc:
+            q += 'ORDER BY id DESC'
+        for row in self.cursor.execute(q):
             _id: int = row[0]
             title: str = row[1]
             if p:
@@ -73,8 +74,7 @@ class DbPlMpv:
     def read_all(self, nostate: bool = False, p: bool = True
                  ) -> list[dict[str, int | str]]:
 
-        rows: list[tuple[int, str]] = []
-
+        rows: list[dict[str, int | str]] = []
         for row in self.cursor.execute(
             f'''
                 SELECT id, title, watched
