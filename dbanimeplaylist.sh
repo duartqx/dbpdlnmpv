@@ -42,6 +42,7 @@ case "$Choice" in
     Watched)
         Watch_choice=$(dbmpv $TABLE_NAME --read --watched 1 --desc | dmenu -l 20)
         [[ -z $Watch_choice ]] && exit
+        mpv --fs "$WATCH_FOLDER/${Watch_choice#*- }"
     ;;
     Add)
         CLIP=$(xclip -selection clipboard -o 2>/dev/null)
