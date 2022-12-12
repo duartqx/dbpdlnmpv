@@ -16,7 +16,7 @@ Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
 case "$Choice" in
     Watch)
-        Watch_choice=$(dbmpv $TABLE_NAME --read | dmenu -l 20)
+        Watch_choice=$(dbmpv $TABLE_NAME --read | dmenu -i -l 20)
         [[ -z $Watch_choice ]] && exit
         mpv --fs "$WATCH_FOLDER/${Watch_choice#*- }"
         # Sets the file to watched
