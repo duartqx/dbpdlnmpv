@@ -17,10 +17,12 @@ class DbPlMpv:
         self.cursor.execute(
             f'''
                 CREATE TABLE IF NOT EXISTS {self._table}
-                (id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-                title text NOT NULL,
-                watched bool NOT NULL,
-                deleted bool NOT NULL DEFAULT 0)
+                (
+                    id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    title text NOT NULL,
+                    watched bool NOT NULL,
+                    deleted bool NOT NULL DEFAULT 0
+                )
             '''
         )
 
@@ -35,7 +37,7 @@ class DbPlMpv:
         if commit:
             self.commit()
 
-    def update(self, id: int, watched: int, commit=True) -> None:
+    def update(self, id: int, watched: int, commit: bool=True) -> None:
         '''
             watched: int = 0 or 1
         '''
@@ -49,20 +51,34 @@ class DbPlMpv:
         if commit:
             self.commit()
 
-    def read_filtered(self, watched: int, desc: bool = False, p: bool = True
+    def read_filtered(self,
+            watched: int | None = None, desc: bool = False, p: bool = True
                       ) -> list[dict[str, int | str]]:
         '''
-            watched: int = 0 or 1
+            watched: int | None = 0, 1 or None
+            p: bool = print or not
         '''
         rows: list[dict[str, int | str]] = []
-        q = f'''
-                SELECT id, title
-                FROM "{self._table}"
-                WHERE watched = {watched}
-                AND deleted = 0
-            '''
+
+        assert watched in [0, 1, None], 'watched must be 0 or 1'
+
+        if watched is None:
+            q = f'''
+                    SELECT id, title
+                    FROM "{self._table}"
+                    WHERE deleted = 0
+                '''
+        else:
+            q = f'''
+                    SELECT id, title
+                    FROM "{self._table}"
+                    WHERE watched = {watched}
+                    AND deleted = 0
+                '''
+
         if desc:
             q += 'ORDER BY id DESC'
+
         for row in self.cursor.execute(q):
             _id: int = row[0]
             title: str = row[1]
@@ -116,15 +132,14 @@ class DbPlMpv:
             print('Error: Not found')
             return [{'id': 0, 'title': ''}]
 
-    def delete(self, ids: list[int]) -> None:
-        for _id in ids:
-            self.cursor.execute(
-                f'''
-                    UPDATE {self._table}
-                    SET deleted = 1
-                    WHERE id = {_id}
-                '''
-            )
+    def delete(self, ids: tuple[int, ...]) -> None:
+        self.cursor.execute(
+            f'''
+                UPDATE {self._table}
+                SET deleted = 1
+                WHERE id IN {ids}
+            '''
+        )
         self.commit()
 
     def commit(self) -> None:

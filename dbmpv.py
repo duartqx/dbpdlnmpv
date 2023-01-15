@@ -28,7 +28,7 @@ PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
 def main(db_file: str, table: str, id: int,
          watched: int, create: str, read: bool,
          readall: bool, update: bool, nostate: bool,
-         desc:bool, delete: str) -> None:
+         desc: bool, delete: str) -> None:
 
     checker = sum([
         bool(create),
@@ -42,7 +42,7 @@ def main(db_file: str, table: str, id: int,
             'Illegal usage: One of --create, --read, --readall, '
             '--update or --delete is required '
             'but they are mutually exclusive.'
-            )
+        )
 
     # Database connection
     db = DbPlMpv(table, db_file)
@@ -50,10 +50,14 @@ def main(db_file: str, table: str, id: int,
     with db.conn:
 
         # Clean up deleted files
-        db.delete([
-            int(row["id"]) for row in db.read_filtered(watched=0, p=False)
-            if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
-        ])
+        db.delete(
+            tuple(
+                (
+                    int(row["id"]) for row in db.read_filtered(p=False)
+                    if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
+                )
+            )
+        )
 
         if read:
             if id:
