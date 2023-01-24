@@ -21,20 +21,20 @@ PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
 @option("--create", help="Create option")
 @option("--read", is_flag=True, help="Read option")
 @option("--readall", is_flag=True, help="Read all option")
-@option("--update", is_flag=True, help="Update option")
+@option("--update_watched", is_flag=True, help="Update option")
 @option("--nostate", is_flag=True, help="Read only the title option")
 @option("--desc", is_flag=True, help="Descrescent flag")
 @option("--delete", help="Change state to deleted")
 def main(db_file: str, table: str, id: int,
          watched: int, create: str, read: bool,
-         readall: bool, update: bool, nostate: bool,
+         readall: bool, update_watched: bool, nostate: bool,
          desc: bool, delete: str) -> None:
 
     checker = sum([
         bool(create),
         bool(read),
         bool(readall),
-        bool(update),
+        bool(update_watched),
         bool(delete),
         ])
     if not checker or checker > 1:
@@ -71,11 +71,11 @@ def main(db_file: str, table: str, id: int,
                 db.read_all(nostate=True)
             else:
                 db.read_all()
-        elif update:
+        elif update_watched:
             if not id:
                 raise UsageError('--id is required')
             else:
-                db.update(id, watched)
+                db.update_watched(id)
         elif create:
             db.create(create, watched)
 

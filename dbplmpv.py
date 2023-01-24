@@ -37,14 +37,20 @@ class DbPlMpv:
         if commit:
             self.commit()
 
-    def update(self, id: int, watched: int, commit: bool=True) -> None:
+    def update_watched(self, id: int, commit: bool=True) -> None:
         '''
             watched: int = 0 or 1
         '''
         self.cursor.execute(
             f'''
                 UPDATE {self._table}
-                SET watched = {watched}
+                SET watched = (
+                    CASE
+                        WHEN watched = 1
+                        THEN 0
+                        ELSE 1
+                    END
+                )
                 WHERE id = {id}
             '''
         )
@@ -105,7 +111,7 @@ class DbPlMpv:
             if p:
                 if not nostate:
                     print(f'{_id} - {title} '
-                          f'[{"watched" if watched else "unwatched"}]')
+                          f'[{"WATCHED" if watched else "UNWATCHED"}]')
                 else:
                     print(f'{_id} - {title}')
             rows.append({'id': _id, 'title': title})

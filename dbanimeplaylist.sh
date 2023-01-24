@@ -24,19 +24,11 @@ case "$Choice" in
         dbmpv $TABLE_NAME --update --id "$_id" --watched 1
     ;;
     Update)
-        Update_choice=$(echo -e "Watched\nUnwatched" | dmenu -i -p "Update status to:")
-        [[ -z $Update_choice ]] && exit
-        case "$Update_choice" in
-            Watched)
-                WBool=1 ;;
-            Unwatched)
-                WBool=0 ;;
-        esac
         What_entry_to_update=$(dbmpv $TABLE_NAME --readall | dmenu -i -l 20)
         [[ -z $What_entry_to_update ]] && exit
         _id=${What_entry_to_update%%-*} # Removes everything and leaves only the id
-        dbmpv $TABLE_NAME --update --id "$_id" --watched $WBool
-        notify-send "Changed file state to $Update_choice"
+        dbmpv $TABLE_NAME --update --id "$_id"
+        notify-send "Updated watched status for $What_entry_to_update"
         dbanimeplaylist
     ;;
     Watched)
