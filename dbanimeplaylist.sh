@@ -21,13 +21,13 @@ case "$Choice" in
         mpv --fs "$WATCH_FOLDER/${Watch_choice#*- }"
         # Sets the file to watched
         _id=${Watch_choice%%-*} # Removes everything and leaves only the id
-        dbmpv $TABLE_NAME --update --id "$_id" --watched 1
+        dbmpv $TABLE_NAME --update_watched --id "$_id"
     ;;
     Update)
         What_entry_to_update=$(dbmpv $TABLE_NAME --readall | dmenu -i -l 20)
         [[ -z $What_entry_to_update ]] && exit
         _id=${What_entry_to_update%%-*} # Removes everything and leaves only the id
-        dbmpv $TABLE_NAME --update --id "$_id"
+        dbmpv $TABLE_NAME --update_watched --id "$_id"
         notify-send "Updated watched status for $What_entry_to_update"
         dbanimeplaylist
     ;;
