@@ -5,17 +5,17 @@ from os import environ
 from pathlib import Path
 
 
-HOME = environ.get('HOME')
-PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
+HOME = environ.get("HOME")
+PLAYLIST_FOLDER = f"{HOME}/Media/Videos"
 
 
 @command()
-@option("--db_file",
-        default=f"{HOME}/.local/share/playlists.db",
-        help="The sqlite db file")
-@option("--table",
-        prompt="What is the table name",
-        help="The table that you want to read")
+@option(
+    "--db_file", default=f"{HOME}/.local/share/playlists.db", help="The sqlite db file"
+)
+@option(
+    "--table", prompt="What is the table name", help="The table that you want to read"
+)
 @option("--id", default=None, help="The id of the row.")
 @option("--watched", default=0, help="Boolean 0 or 1")
 @option("--create", help="Create option")
@@ -25,23 +25,34 @@ PLAYLIST_FOLDER = f'{HOME}/Media/Videos'
 @option("--nostate", is_flag=True, help="Read only the title option")
 @option("--desc", is_flag=True, help="Descrescent flag")
 @option("--delete", help="Change state to deleted")
-def main(db_file: str, table: str, id: int,
-         watched: int, create: str, read: bool,
-         readall: bool, update_watched: bool, nostate: bool,
-         desc: bool, delete: str) -> None:
+def main(
+    db_file: str,
+    table: str,
+    id: int,
+    watched: int,
+    create: str,
+    read: bool,
+    readall: bool,
+    update_watched: bool,
+    nostate: bool,
+    desc: bool,
+    delete: str,
+) -> None:
 
-    checker = sum([
-        bool(create),
-        bool(read),
-        bool(readall),
-        bool(update_watched),
-        bool(delete),
-        ])
+    checker = sum(
+        [
+            bool(create),
+            bool(read),
+            bool(readall),
+            bool(update_watched),
+            bool(delete),
+        ]
+    )
     if not checker or checker > 1:
         raise UsageError(
-            'Illegal usage: One of --create, --read, --readall, '
-            '--update or --delete is required '
-            'but they are mutually exclusive.'
+            "Illegal usage: One of --create, --read, --readall, "
+            "--update or --delete is required "
+            "but they are mutually exclusive."
         )
 
     # Database connection
@@ -53,7 +64,8 @@ def main(db_file: str, table: str, id: int,
         db.delete(
             tuple(
                 (
-                    int(row["id"]) for row in db.read_filtered(p=False)
+                    int(row["id"])
+                    for row in db.read_filtered(p=False)
                     if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
                 )
             )
@@ -73,12 +85,12 @@ def main(db_file: str, table: str, id: int,
                 db.read_all()
         elif update_watched:
             if not id:
-                raise UsageError('--id is required')
+                raise UsageError("--id is required")
             else:
                 db.update_watched(id)
         elif create:
             db.create(create, watched)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
