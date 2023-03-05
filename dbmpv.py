@@ -25,6 +25,7 @@ def __get_parsed() -> Namespace:
 
     """
     parser = ArgumentParser(prog="DbMpv-cli")
+
     for option in get_options():
         if "arg" in option:
             parser.add_argument(option.pop("arg"), **option)
@@ -41,7 +42,6 @@ def __get_parsed() -> Namespace:
             bool(args.update),
         )
     )
-
     if not checker or checker > 1:
         parser.error(
             "Illegal usage: One of --create, --read, --readall, "
