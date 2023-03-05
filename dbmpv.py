@@ -1,95 +1,94 @@
 #!/usr/bin/env python
-from click import command, option, UsageError
+from argparse import ArgumentParser, Namespace
+from cli_options import get_options
 from dbplmpv import DbPlMpv
-from os import environ
 from pathlib import Path
 
 
-HOME = environ.get("HOME")
-PLAYLIST_FOLDER = f"{HOME}/Media/Videos"
+def __get_parsed() -> Namespace:
+    """
+    Builds and returns main's argument parser
 
+    Arguments:
+        dbfile: str -> The sqlite database file, required
+        table: str -> Table name on the database, required
+        path: str -> The folder where the video files are stored
+    Options:
+        -c, --create: str -> Title of the row to be created
+        -d, --desc: bool -> Descending order
+        -i, --id: int -> Row id
+        -n, --nostatus: bool -> Prints only row title without watched status
+        -r, --read: bool -> Reads one line if id is passed or multiple rows by watched status
+        -R, --readall: bool -> Reads all rows without filter
+        -u, --update: bool -> Updates watched status, requires id to be passed
+        -w, --watched: bool -> 0 or 1 to be used when filtering by watched status
 
-@command()
-@option(
-    "--db_file", default=f"{HOME}/.local/share/playlists.db", help="The sqlite db file"
-)
-@option(
-    "--table", prompt="What is the table name", help="The table that you want to read"
-)
-@option("--id", default=None, help="The id of the row.")
-@option("--watched", default=0, help="Boolean 0 or 1")
-@option("--create", help="Create option")
-@option("--read", is_flag=True, help="Read option")
-@option("--readall", is_flag=True, help="Read all option")
-@option("--update_watched", is_flag=True, help="Update option")
-@option("--nostate", is_flag=True, help="Read only the title option")
-@option("--desc", is_flag=True, help="Descrescent flag")
-@option("--delete", help="Change state to deleted")
-def main(
-    db_file: str,
-    table: str,
-    id: int,
-    watched: int,
-    create: str,
-    read: bool,
-    readall: bool,
-    update_watched: bool,
-    nostate: bool,
-    desc: bool,
-    delete: str,
-) -> None:
+    """
+    parser = ArgumentParser(prog="DbMpv-cli")
+    for option in get_options():
+        if "arg" in option:
+            parser.add_argument(option.pop("arg"), **option)
+        else:
+            parser.add_argument(option.pop("opt"), option.pop("flag"), **option)
+
+    args = parser.parse_args()
 
     checker = sum(
-        [
-            bool(create),
-            bool(read),
-            bool(readall),
-            bool(update_watched),
-            bool(delete),
-        ]
+        (
+            bool(args.create),
+            bool(args.read),
+            bool(args.readall),
+            bool(args.update),
+        )
     )
+
     if not checker or checker > 1:
-        raise UsageError(
+        parser.error(
             "Illegal usage: One of --create, --read, --readall, "
             "--update or --delete is required "
             "but they are mutually exclusive."
         )
 
-    # Database connection
-    db = DbPlMpv(table, db_file)
+    if args.update and not args.id:
+        parser.error("--id is required when updating")
+
+    return args
+
+
+def main() -> None:
+
+    args: Namespace = __get_parsed()
+
+    db = DbPlMpv(table_name=args.table, db_file=args.dbfile)
 
     with db.conn:
 
-        # Clean up deleted files
-        db.delete(
-            tuple(
-                (
-                    int(row["id"])
-                    for row in db.read_filtered(p=False)
-                    if not Path(f'{PLAYLIST_FOLDER}/{row["title"]}').is_file()
+        watched = int(args.watched)
+
+        # Checks if the video file still exists in the playlist folder, if not
+        # then updates its row to deleted=1
+        if args.read or args.readall and args.path:
+            db.delete(
+                tuple(
+                    (
+                        int(row["id"])
+                        for row in db.read_filtered(echo=False)
+                        if not Path(f"{args.path}/{row['title']}").is_file()
+                    )
                 )
             )
-        )
 
-        if read:
-            if id:
-                db.read_one(id)
-            elif desc:
-                db.read_filtered(watched, desc=True)
+        if args.read:
+            if args.id:
+                db.read_one(id=args.id)
             else:
-                db.read_filtered(watched)
-        elif readall:
-            if nostate:
-                db.read_all(nostate=True)
-            else:
-                db.read_all()
-        elif update_watched:
-            if not id:
-                raise UsageError("--id is required")
-            else:
-                db.update_watched(id)
-        elif create:
-            db.create(create, watched)
+                db.read_filtered(watched=watched, desc=args.desc)
+        elif args.readall:
+            db.read_all(nostatus=args.nostatus)
+        elif args.update:
+            db.update_watched(id=args.id)
+        else:
+            db.create(title=args.create, watched=watched)
 
 
 if __name__ == "__main__":

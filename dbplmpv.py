@@ -58,11 +58,11 @@ class DbPlMpv:
             self.commit()
 
     def read_filtered(
-        self, watched: int | None = None, desc: bool = False, p: bool = True
+        self, watched: int | None = None, desc: bool = False, echo: bool = True
     ) -> list[dict[str, int | str]]:
         """
         watched: int | None = 0, 1 or None
-        p: bool = print or not
+        echo: bool = print or not
         """
         rows: list[dict[str, int | str]] = []
 
@@ -88,17 +88,17 @@ class DbPlMpv:
         for row in self.cursor.execute(q):
             _id: int = row[0]
             title: str = row[1]
-            if p:
+            if echo:
                 print(f"{_id} - {title}")
             rows.append({"id": _id, "title": title})
         return rows
 
     def read_all(
-        self, nostate: bool = False, p: bool = True
+        self, nostatus: bool = False, echo: bool = True
     ) -> list[dict[str, int | str]]:
 
         rows: list[dict[str, int | str]] = []
-        for row in self.cursor.execute(
+        for _id, title, watched in self.cursor.execute(
             f"""
                 SELECT id, title, watched
                 FROM "{self._table}"
@@ -106,20 +106,17 @@ class DbPlMpv:
                 ORDER BY id DESC
             """
         ):
-            _id: int = row[0]
-            title: str = row[1]
-            watched: int = row[2]
-            if p:
-                if not nostate:
+            if echo:
+                if nostatus:
+                    print(f"{_id} - {title}")
+                else:
                     print(
                         f"{_id} - {title} " f'[{"WATCHED" if watched else "UNWATCHED"}]'
                     )
-                else:
-                    print(f"{_id} - {title}")
             rows.append({"id": _id, "title": title})
         return rows
 
-    def read_one(self, id: int, p: bool = True) -> list[dict[str, int | str]]:
+    def read_one(self, id: int, echo: bool = True) -> list[dict[str, int | str]]:
 
         row = self.cursor.execute(
             f"""
@@ -132,7 +129,7 @@ class DbPlMpv:
         if row:
             _id: int = row[0]
             title: str = row[1]
-            if p:
+            if echo:
                 print(f"{_id} - {title}")
             return [{"id": _id, "title": title}]
         else:
