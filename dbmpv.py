@@ -9,10 +9,10 @@ def __get_parsed() -> Namespace:
     """
     Builds and returns main's argument parser
 
-    Arguments:
+    ARGUMENTS:
         dbfile: str -> The sqlite database file, required
         table: str -> Table name on the database, required
-    Options:
+    OPTIONS:
         -c, --create: str -> Title of the row to be created
         -d, --desc: bool -> Descending order
         -i, --id: int -> Row id
@@ -22,7 +22,6 @@ def __get_parsed() -> Namespace:
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
         -w, --watched: bool -> 0 or 1 to be used when filtering by watched status
-
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
