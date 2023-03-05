@@ -59,6 +59,6 @@ Watched)
     ;;
 Add)
     CLIP=$(xclip -selection clipboard -o 2>/dev/null)
-    [[ -n $CLIP ]] && dbmpv $DB_FILE $TABLE_NAME --create $CLIP
+    [[ -n $CLIP ]] && dbmpv $DB_FILE $TABLE_NAME --create "$CLIP"
     ;;
 esac
