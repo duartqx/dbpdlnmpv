@@ -29,7 +29,9 @@ def __get_parsed() -> Namespace:
         if "arg" in option:
             parser.add_argument(option.pop("arg"), **option)
         else:
-            parser.add_argument(option.pop("opt"), option.pop("flag"), **option)
+            parser.add_argument(
+                option.pop("opt"), option.pop("flag"), **option
+            )
 
     args = parser.parse_args()
 
@@ -71,7 +73,7 @@ def main() -> None:
                 tuple(
                     (
                         int(row["id"])
-                        for row in db.read_filtered(echo=False)
+                        for row in db.read_all(echo=False)
                         if not Path(f"{args.path}/{row['title']}").is_file()
                     )
                 )

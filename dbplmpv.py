@@ -38,9 +38,6 @@ class DbPlMpv:
             self.commit()
 
     def update_watched(self, id: int, commit: bool = True) -> None:
-        """
-        watched: int = 0 or 1
-        """
         self.cursor.execute(
             f"""
                 UPDATE {self._table}
@@ -58,7 +55,7 @@ class DbPlMpv:
             self.commit()
 
     def read_filtered(
-        self, watched: int | None = None, desc: bool = False, echo: bool = True
+        self, watched: int, desc: bool = False, echo: bool = True
     ) -> list[dict[str, int | str]]:
         """
         watched: int | None = 0, 1 or None
@@ -66,28 +63,17 @@ class DbPlMpv:
         """
         rows: list[dict[str, int | str]] = []
 
-        assert watched in [0, 1, None], "watched must be 0 or 1"
-
-        if watched is None:
-            q = f"""
-                    SELECT id, title
-                    FROM "{self._table}"
-                    WHERE deleted = 0
-                """
-        else:
-            q = f"""
-                    SELECT id, title
-                    FROM "{self._table}"
-                    WHERE watched = {watched}
-                    AND deleted = 0
-                """
+        q = f"""
+                SELECT id, title
+                FROM "{self._table}"
+                WHERE watched = {watched}
+                AND deleted = 0
+        """
 
         if desc:
             q += "ORDER BY id DESC"
 
-        for row in self.cursor.execute(q):
-            _id: int = row[0]
-            title: str = row[1]
+        for _id, title in self.cursor.execute(q):
             if echo:
                 print(f"{_id} - {title}")
             rows.append({"id": _id, "title": title})
@@ -111,12 +97,15 @@ class DbPlMpv:
                     print(f"{_id} - {title}")
                 else:
                     print(
-                        f"{_id} - {title} " f'[{"WATCHED" if watched else "UNWATCHED"}]'
+                        f"{_id} - {title} "
+                        f"[{'WATCHED' if watched else 'UNWATCHED'}]"
                     )
             rows.append({"id": _id, "title": title})
         return rows
 
-    def read_one(self, id: int, echo: bool = True) -> list[dict[str, int | str]]:
+    def read_one(
+        self, id: int, echo: bool = True
+    ) -> list[dict[str, int | str]]:
 
         row = self.cursor.execute(
             f"""
@@ -127,8 +116,7 @@ class DbPlMpv:
         ).fetchone()
 
         if row:
-            _id: int = row[0]
-            title: str = row[1]
+            _id, title = row
             if echo:
                 print(f"{_id} - {title}")
             return [{"id": _id, "title": title}]
