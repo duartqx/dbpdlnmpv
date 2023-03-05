@@ -12,12 +12,12 @@ def __get_parsed() -> Namespace:
     Arguments:
         dbfile: str -> The sqlite database file, required
         table: str -> Table name on the database, required
-        path: str -> The folder where the video files are stored
     Options:
         -c, --create: str -> Title of the row to be created
         -d, --desc: bool -> Descending order
         -i, --id: int -> Row id
         -n, --nostatus: bool -> Prints only row title without watched status
+        -p, --path: str -> The folder where the video files are stored
         -r, --read: bool -> Reads one line if id is passed or multiple rows by watched status
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
