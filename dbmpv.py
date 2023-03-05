@@ -67,7 +67,7 @@ def main() -> None:
 
         # Checks if the video file still exists in the playlist folder, if not
         # then updates its row to deleted=1
-        if args.read or args.readall and args.path:
+        if (args.read or args.readall) and args.path:
             db.delete(
                 tuple(
                     (
