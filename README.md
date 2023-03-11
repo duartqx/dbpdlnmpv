@@ -6,6 +6,6 @@ dbpdlnmpv is an evolution of [pdlnmpv](https://github.com/duartqx/pdlnlink/blob/
 
 All of these script files interact as follows:
 
- 1. dbplnmpv.py is in charge of all database operations such as create, read, update, and delete.
- 2. dbmpv.py is in charge of interacting with dbplnmpv.py via a simple, straightforward command-line interface.
- 3. dbanimeplaylist.sh is a bash script that runs dbmpv and outputs the results to dmenu. This is the main interface, which can be accessed via keybindings or a.desktop file on GNU/Linux. Before you can use it, you must change the three variables at the top: DB FILE, TABLE NAME, and WATCH FOLDER to something you prefer. If DB FILE or TABLE NAME does not exist, dbplnmpv.py will create it for you.
+ 1. [dbplnmpv.py](https://github.com/duartqx/dbplnmpv/blob/main/dbplmpv.py) is in charge of all database operations such as create, read, update, and delete.
+ 2. [dbmpv.py](https://github.com/duartqx/dbplnmpv/blob/main/dbmpv.py) is in charge of interacting with dbplnmpv.py via a simple, straightforward command-line interface.
+ 3. [dbanimeplaylist.sh](https://github.com/duartqx/dbplnmpv/blob/main/dbanimeplaylist.sh) is a bash script that runs dbmpv and outputs the results to dmenu. This is the main interface, which can be accessed via keybindings or a.desktop file on GNU/Linux. Before you can use it, you must change the three variables at the top: DB FILE, TABLE NAME, and WATCH FOLDER to something you prefer. If DB FILE or TABLE NAME does not exist, dbplnmpv.py will create it for you.
