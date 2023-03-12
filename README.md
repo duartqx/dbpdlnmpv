@@ -38,7 +38,7 @@ You can run dbanimeplaylist.sh if you have dmenu installed on your system, eithe
 
  ### 2. `dbmpv.py`
 
-dbanimeplaylist.sh is just a helper script that integrates dbmpv.py with dmenu and mpv; you can actually use dbmpv directly. When using it this way, you must always pass the positional arguments `DB FILE` and `TABLE NAME`.
+dbanimeplaylist.sh is just a helper script that integrates dbmpv.py with dmenu and mpv; you can actually use dbmpv directly. When using it this way, you must always pass the positional arguments `DB_FILE` and `TABLE_NAME`.
 For a comprehensive list of options, type and execute `dbmpv --help` on your terminal.
 
 #### Examples:
