@@ -22,19 +22,19 @@ All of these script files interact as follows:
 
 	 1.1. Watch
 
-	A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to deleted=1 if their files have already been deleted.
+	 A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to deleted=1 if their files have already been deleted.
 
 	 1.2. Update
 
-	A secondary dmenu will show up listing all rows that their file are still on disk, if you select one its watched status will flip
+	 A secondary dmenu will show up listing all rows that their file are still on disk, if you select one its watched status will flip
 
 	 1.3. Watched
 
-	Similar to Watch, but will list already watched entries and selecting it will also play their file with mpv.
+	 Similar to Watch, but will list already watched entries and selecting it will also play their file with mpv.
 
 	 1.4. Add
 
-	It will add a row to the database with the contents of your clipboard as the title
+	 It will add a row to the database with the contents of your clipboard as the title
 
  2. dbmpv
 
