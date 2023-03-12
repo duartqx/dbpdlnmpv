@@ -12,7 +12,7 @@ All of these script files interact as follows:
 
  ## Usage
 
- 1. **dmenu**/dbanimeplaylist.sh
+ ### **dmenu**/dbanimeplaylist.sh
 
 	You can run dbanimeplaylist.sh if you have dmenu installed on your system, either from source or via your distro's package manager. Ddmenu will appear on the screen with four menu entries (Watch, Update, Watched, Add), and you can select any of them with the arrow keys on the keyboard and enter:
 
@@ -20,23 +20,23 @@ All of these script files interact as follows:
       <img src="https://github.com/duartqx/images/blob/main/dbanimeplaylistsh.png?raw=true" alt="dbanimeplaylist.sh" />
     </p>
 
-	 1.1. Watch
+	 1. Watch
 
 	 A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to deleted=1 if their files have already been deleted.
 
-	 1.2. Update
+	 2. Update
 
 	 A secondary dmenu will show up listing all rows that their file are still on disk, if you select one its watched status will flip
 
-	 1.3. Watched
+	 3. Watched
 
 	 Similar to Watch, but will list already watched entries and selecting it will also play their file with mpv.
 
-	 1.4. Add
+	 4. Add
 
 	 It will add a row to the database with the contents of your clipboard as the title
 
- 2. dbmpv
+ ### 'dbmpv.py'
 
 	dbanimeplaylist.sh is just a helper script that integrates dbmpv.py with dmenu and mpv; you can actually use dbmpv directly. When using it this way, you must always pass the positional arguments `DB FILE` and `TABLE NAME`.
 For a comprehensive list of options, type and execute `dbmpv --help` on your terminal.
