@@ -8,11 +8,11 @@ All of these script files interact as follows:
 
  1. [dbplnmpv.py](https://github.com/duartqx/dbplnmpv/blob/main/dbplmpv.py) is in charge of all database operations such as create, read, update, and delete.
  2. [dbmpv.py](https://github.com/duartqx/dbplnmpv/blob/main/dbmpv.py) is in charge of interacting with dbplnmpv.py via a simple, straightforward command-line interface.
- 3. [dbanimeplaylist.sh](https://github.com/duartqx/dbplnmpv/blob/main/dbanimeplaylist.sh) is a bash script that runs dbmpv and outputs the results to dmenu. This is the main interface, which can be accessed via keybindings or a.desktop file on GNU/Linux. Before you can use it, you must change the three variables at the top: DB FILE, TABLE NAME, and WATCH FOLDER to something you prefer. If DB FILE or TABLE NAME does not exist, dbplnmpv.py will create it for you.
+ 3. [dbanimeplaylist.sh](https://github.com/duartqx/dbplnmpv/blob/main/dbanimeplaylist.sh) is a bash script that runs dbmpv and outputs the results to dmenu. This is the main interface, which can be accessed via keybindings or a.desktop file on GNU/Linux. Before you can use it, you must change the three variables at the top: `DB_FILE`, `TABLE_NAME`, and `WATCH_FOLDER` to something you prefer. If `DB_FILE` or `TABLE_NAME` does not exist, `dbplnmpv.py` will create it for you.
 
  ## Usage
 
- 1. **dmenu**
+ 1. **dmenu**/dbanimeplaylist.sh
 	You can run dbanimeplaylist.sh if you have dmenu installed on your system, either from source or via your distro's package manager. Ddmenu will appear on the screen with four menu entries (Watch, Update, Watched, Add), and you can select any of them with the arrow keys on the keyboard and enter:
 
     <p align="center">
