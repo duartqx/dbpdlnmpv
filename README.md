@@ -47,13 +47,13 @@ For a comprehensive list of options, type and execute `dbmpv --help` on your ter
 
          This option will write a row
 
-		 - `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --create "[ASW] Ars no Kyojuu - 10 [1080p HEVC][6C8C78F0].mkv"`
+		   `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --create "[ASW] Ars no Kyojuu - 10 [1080p HEVC][6C8C78F0].mkv"`
 
 	 - 	`--read`:
 
          This will query for unwatched entries and print the results to standard output.
 
-		 - `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --read`
+		   `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --read`
 
 		 - if you add the `-w/--watched` option you'll get watched entries instead.
 		 - By default, the ordering is ascending; however, if you pass the `-d/--desc` option, the ordering will be inverted to descending.
@@ -62,10 +62,10 @@ For a comprehensive list of options, type and execute `dbmpv --help` on your ter
 
          This option will output all rows, regardless of whether they are watched or not, but will ignore rows with deleted = 1.
 
-		 - `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --read`
+		   `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --read`
 
 	 - `--update`:
 
 		 Because the update option will update a row's watched status, you also needs to pass the `--id <id>` option.
 
-		 - `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --update --id 234`
+		   `dbmpv "$HOME/.local/share/playlists.db" animeplaylist --update --id 234`
