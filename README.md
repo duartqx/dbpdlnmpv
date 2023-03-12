@@ -15,7 +15,9 @@ All of these script files interact as follows:
  1. **dmenu**
 	You can run dbanimeplaylist.sh if you have dmenu installed on your system, either from source or via your distro's package manager. Ddmenu will appear on the screen with four menu entries (Watch, Update, Watched, Add), and you can select any of them with the arrow keys on the keyboard and enter:
 
-	![dbanimeplaylist.sh](https://github.com/duartqx/images/blob/main/dbanimeplaylistsh.png?raw=true "dbanimeplaylist.sh")
+    <p align="center">
+      <img src="https://github.com/duartqx/images/blob/main/dbanimeplaylistsh.png?raw=true" alt="dbanimeplaylist.sh" />
+    </p>
 
 	 1.1. Watch
 		A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to deleted=1 if their files have already been deleted.
