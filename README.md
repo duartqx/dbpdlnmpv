@@ -13,7 +13,7 @@ All of these script files interact as follows:
 
  ## Usage
 
- ### 1. **dmenu**/dbanimeplaylist.sh
+ ### 1. `dmenu/dbanimeplaylist.sh`
 
 You can run dbanimeplaylist.sh if you have dmenu installed on your system, either from source or via your distro's package manager. Ddmenu will appear on the screen with four menu entries (Watch, Update, Watched, Add), and you can select any of them with the arrow keys on the keyboard and enter:
 
@@ -23,7 +23,7 @@ You can run dbanimeplaylist.sh if you have dmenu installed on your system, eithe
 
  1. Watch
 
-	 A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to deleted=1 if their files have already been deleted.
+	 A secondary dmenu will show up listing the database entries (in this case anime episodes) that are marked as not watched, if you press enter in one of the rows the episode will be played in fullscreen using [mpv](https://mpv.io/). Behind the scenes this option also updates database rows to `deleted = 1` if their files have already been deleted.
 
  2. Update
 
@@ -60,7 +60,7 @@ For a comprehensive list of options, type and execute `dbmpv --help` on your ter
 
  - `--readall`:
 
-      This option will output all rows, regardless of whether they are watched or not, but will ignore rows with deleted = 1.
+      This option will output all rows, regardless of whether they are watched or not, but will ignore rows with `deleted = 1`.
 	 
 	   dbmpv "$HOME/.local/share/playlists.db" animeplaylist --read
 
