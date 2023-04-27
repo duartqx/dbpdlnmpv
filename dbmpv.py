@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser, Namespace
-from cli_options import get_options
+from cli_args import get_args
 from dbplmpv import DbPlMpv
 from pathlib import Path
 
@@ -27,13 +27,8 @@ def _get_args() -> Namespace:
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
-    for option in get_options():
-        if "arg" in option:
-            parser.add_argument(option.pop("arg"), **option)
-        else:
-            parser.add_argument(
-                option.pop("opt"), option.pop("flag"), **option
-            )
+    for arg in get_args():
+        parser.add_argument(*arg.pop("arg"), **arg)
 
     args = parser.parse_args()
 
