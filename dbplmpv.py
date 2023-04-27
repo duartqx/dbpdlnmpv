@@ -124,28 +124,24 @@ class DbPlMpv:
             print("Error: Not found")
             return [{"id": 0, "title": ""}]
 
+    @staticmethod
+    def _get_where(ids: tuple[int, ...]) -> str:
+        if len(ids) > 1:
+            return f"WHERE id IN {ids}"
+        return f"WHERE id = {ids[0]}"
+
     def delete(self, ids: tuple[int, ...]) -> None:
 
-        if len(ids) > 1:
-            self.cursor.execute(
-                f"""
-                    UPDATE {self._table}
-                    SET deleted = 1
-                    WHERE id IN {ids}
-                """
-            )
-        elif ids:
-            self.cursor.execute(
-                f"""
-                    UPDATE {self._table}
-                    SET deleted = 1
-                    WHERE id = {ids[0]}
-                """
-            )
-        else:
-            return
+        if ids:
 
-        self.commit()
+            self.cursor.execute(
+                f"""
+                    UPDATE {self._table}
+                    SET deleted = 1
+                    {self._get_where(ids)}
+                """
+            )
+            self.commit()
 
     def commit(self) -> None:
         """Commits to the database"""

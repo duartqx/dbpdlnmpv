@@ -5,9 +5,9 @@ from dbplmpv import DbPlMpv
 from pathlib import Path
 
 
-def __get_parsed() -> Namespace:
+def _get_args() -> Namespace:
     """
-    Builds and returns main's argument parser
+    Builds and returns main's parsed command line arguments
 
     ARGUMENTS:
         dbfile: str -> The sqlite database file, required
@@ -18,10 +18,12 @@ def __get_parsed() -> Namespace:
         -i, --id: int -> Row id
         -n, --nostatus: bool -> Prints only row title without watched status
         -p, --path: str -> The folder where the video files are stored
-        -r, --read: bool -> Reads one line if id is passed or multiple rows by watched status
+        -r, --read: bool -> Reads one line if id is passed or multiple rows by
+                            watched status
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
-        -w, --watched: bool -> 0 or 1 to be used when filtering by watched status
+        -w, --watched: bool -> 0 or 1 to be used when filtering by watched
+                               status
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
@@ -58,7 +60,7 @@ def __get_parsed() -> Namespace:
 
 def main() -> None:
 
-    args: Namespace = __get_parsed()
+    args: Namespace = _get_args()
 
     db = DbPlMpv(table_name=args.table, db_file=args.dbfile)
 
