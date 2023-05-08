@@ -26,7 +26,7 @@ class DbPlMpv:
             """
         )
 
-    def create(self, title: str, watched: int, commit=True) -> None:
+    def create(self, title: str, watched: int, commit: bool = True) -> None:
         self.cursor.execute(
             f"""
                 INSERT INTO {self._table}
