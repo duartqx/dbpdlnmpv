@@ -24,6 +24,7 @@ def _get_args() -> Namespace:
         -u, --update: bool -> Updates watched status, requires id to be passed
         -w, --watched: bool -> 0 or 1 to be used when filtering by watched
                                status
+        -C, --collection -> The entry is a collection/season
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
@@ -54,39 +55,45 @@ def _get_args() -> Namespace:
 
 
 def main() -> None:
-
     args: Namespace = _get_args()
 
     db = DbPlMpv(table_name=args.table, db_file=args.dbfile)
 
     with db.conn:
-
         watched = int(args.watched)
 
         # Checks if the video file still exists in the playlist folder, if not
         # then updates its row to deleted=1
-        if (args.read or args.readall) and args.path:
+        if args.read or args.readall:
             db.delete(
                 tuple(
                     (
                         int(row["id"])
-                        for row in db.read_all(echo=False)
-                        if not Path(f"{args.path}/{row['title']}").is_file()
+                        for row in db.read_all()
+                        if not Path(f"{row['path']}").is_file()
                     )
                 )
             )
 
         if args.read:
             if args.id:
-                db.read_one(id=args.id)
+                row = db.read_one(id=args.id)
+                if row:
+                    print(row)
             else:
-                db.read_filtered(watched=watched, desc=args.desc)
+                for row in db.read_filtered(watched=watched, desc=args.desc):
+                    print(row)
         elif args.readall:
-            db.read_all(nostatus=args.nostatus)
+            for row in db.read_all():
+                print(row)
         elif args.update:
             db.update_watched(id=args.id)
         else:
-            db.create(title=args.create, watched=watched)
+            db.create(
+                entry=args.create,
+                collection=args.collection,
+                watched=watched,
+            )
 
 
 if __name__ == "__main__":

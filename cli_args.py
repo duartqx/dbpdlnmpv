@@ -17,6 +17,11 @@ def get_args() -> tuple[dict[str, Any], ...]:
             "action": "store",
         },
         {
+            "arg": ("-C", "--collection"),
+            "help": "Create row that is a collection",
+            "action": "store_true",
+        },
+        {
             "arg": ("-d", "--desc"),
             "help": "Descending order",
             "action": "store_true",
@@ -31,10 +36,6 @@ def get_args() -> tuple[dict[str, Any], ...]:
             "arg": ("-n", "--nostatus"),
             "help": "Print only the title",
             "action": "store_true",
-        },
-        {
-            "arg": ("-p", "--path"),
-            "help": "The folder where the video files are stored. required",
         },
         {
             "arg": ("-r", "--read"),

@@ -2,13 +2,13 @@
 # shellcheck disable=SC2086
 
 DMENU_OPTIONS='Watch
+Watch Collection
 Update
 Watched
 Add'
 
 DB_FILE="$HOME/.local/share/playlists.db"
 TABLE_NAME='animeplaylist'
-WATCH_FOLDER="$HOME/Media/Videos"
 
 Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
@@ -16,10 +16,7 @@ Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
 case "$Choice" in
 Watch)
-    _choice=$(
-        dbmpv $DB_FILE $TABLE_NAME --path $WATCH_FOLDER --read |
-            dmenu -i -l 20
-    )
+    _choice=$(dbmpv $DB_FILE $TABLE_NAME --read | dmenu -i -l 20)
 
     # Exits if no choice was selected
     [[ -z $_choice ]] && exit
@@ -31,10 +28,7 @@ Watch)
     dbmpv $DB_FILE $TABLE_NAME -u --id "${_choice%%-*}"
     ;;
 Update)
-    _to_update=$(
-        dbmpv $DB_FILE $TABLE_NAME --path $WATCH_FOLDER --readall |
-            dmenu -i -l 20
-    )
+    _to_update=$(dbmpv $DB_FILE $TABLE_NAME --readall | dmenu -i -l 20)
 
     # Exits if no choice was selected
     [[ -z $_to_update ]] && exit
@@ -45,11 +39,7 @@ Update)
     dbanimeplaylist
     ;;
 Watched)
-    _choice=$(
-        dbmpv $DB_FILE $TABLE_NAME --path $WATCH_FOLDER \
-            --read --watched --desc |
-            dmenu -i -l 20
-    )
+    _choice=$(dbmpv $DB_FILE $TABLE_NAME --read --watched --desc | dmenu -i -l 20)
 
     # Exits if no choice was selected
     [[ -z $_choice ]] && exit

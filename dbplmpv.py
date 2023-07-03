@@ -1,111 +1,195 @@
+from pathlib import Path
+
 import sqlite3
+import os
 
 
 class DbPlMpv:
 
     """Sqlite Pdlnmpv"""
 
-    def __init__(self, table_name: str, db_file: str):
+    def __init__(
+        self,
+        table_name: str,
+        db_file: str,
+        base_dir: str = f"{os.environ['HOME']}/Media/Videos",
+    ):
         self._table = table_name
         self._db = db_file
+        self.base_dir = base_dir.rstrip("/")
         self.conn = sqlite3.connect(self._db)
+        self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
-        self.create_db()
+    def create(
+        self,
+        entry: str,
+        watched: int,
+        collection: bool = False,
+        commit: bool = True,
+    ) -> None:
+        """Creates a row in the database"""
 
-    def create_db(self) -> None:
-        self.cursor.execute(
-            f"""
-                CREATE TABLE IF NOT EXISTS {self._table}
-                (
-                    id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    title text NOT NULL,
-                    watched bool NOT NULL,
-                    deleted bool NOT NULL DEFAULT 0
-                )
-            """
-        )
+        entry_path: Path = Path(entry)
 
-    def create(self, title: str, watched: int, commit: bool = True) -> None:
-        self.cursor.execute(
-            f"""
+        if not collection:
+            q: str = f"""
                 INSERT INTO {self._table}
-                (title, watched)
-                VALUES ("{title}", {watched})
+                (title, watched, path)
+                VALUES (?, ?, ?)
             """
-        )
+
+            title_watched_path_values: tuple[str, str, str] = (
+                str(entry_path.name),
+                str(watched),
+                str(entry_path),
+            )
+
+            self.cursor.execute(q, title_watched_path_values)
+        else:
+            """
+            If is collection then it means it's a folder that contains one or
+            many seasons
+            """
+
+            values_to_insert: list[tuple[str, str, str]] = [
+                # Makes sure to add the entry_path without checks, we can mark
+                # it as watched later if the folder is empty
+                (
+                    str(entry_path.name),
+                    str(entry_path),
+                    str(1),
+                )
+            ]
+
+            collection__contents: list[Path] = sorted(
+                entry_path.iterdir(), key=lambda p: p.name
+            )
+
+            collection_other_parents: list[Path] = []
+
+            def add_path(p: Path):
+                """
+                If p.is_dir() then appends to collection_other_parents or a
+                row to rows_to_insert
+                """
+
+                is_collection: int = int(p.is_dir())
+
+                video_extensions: tuple[str, str, str] = (
+                    ".mkv",
+                    ".mp4",
+                    ".webm",
+                )
+
+                there_is_any_video_in_the_collection: bool = (
+                    any(
+                        f.suffix.lower() in video_extensions
+                        for f in p.glob("*")
+                    )
+                    if is_collection
+                    else False
+                )
+
+                if is_collection and there_is_any_video_in_the_collection:
+                    collection_other_parents.append(p)
+                elif p.suffix.lower() in video_extensions:
+                    # If it's a collection (and it's not empty) or is a video file, adds to rows
+                    # row => (title, path, is_collection)
+                    values_to_insert.append(
+                        (
+                            str(p.name),  # title
+                            str(p),  # path
+                            str(is_collection),  # is_collection
+                        )
+                    )
+
+            for p in collection__contents:
+                # Appends directories to collection_other_parents or rows to
+                # rows_to_insert
+                add_path(p)
+
+            while collection_other_parents:
+                # Loops throught until there's no more directories
+                other_parent: Path = collection_other_parents.pop()
+
+                for p in other_parent.iterdir():
+                    add_path(p)
+
+            q: str = f"""
+                INSERT INTO {self._table}
+                (title, watched, path, is_collection)
+                VALUES (?, {watched}, ?, ?)
+            """
+
+            self.cursor.executemany(q, values_to_insert)
+
         if commit:
             self.commit()
 
     def update_watched(self, id: int, commit: bool = True) -> None:
-        self.cursor.execute(
-            f"""
-                UPDATE {self._table}
-                SET watched = (
-                    CASE
-                        WHEN watched = 1
-                        THEN 0
-                        ELSE 1
-                    END
-                )
-                WHERE id = {id}
-            """
-        )
+        q: str = f"""
+            UPDATE {self._table}
+            SET watched = (
+                CASE
+                    WHEN watched = 1
+                    THEN 0
+                    ELSE 1
+                END
+            )
+            WHERE id = {id}
+        """
+
+        self.cursor.execute(q)
+
         if commit:
             self.commit()
 
     def read_filtered(
-        self, watched: int, desc: bool = False, echo: bool = True
+        self, watched: int, desc: bool = False
     ) -> list[dict[str, int | str]]:
         """
-        watched: int | None = 0, 1 or None
-        echo: bool = print or not
-        """
-        rows: list[dict[str, int | str]] = []
+        Queries the database for all rows that are set to not deleted and that
+        watched == watched
 
-        q = f"""
-                SELECT id, title
+        watched: int | None = 0, 1 => watched or not
+        desc: bool => Descending order
+        """
+
+        q: str = f"""
+                SELECT id, title, path
                 FROM "{self._table}"
                 WHERE watched = {watched}
                 AND deleted = 0
+                AND is_collection = 0
         """
 
         if desc:
             q += "ORDER BY id DESC"
 
-        for _id, title in self.cursor.execute(q):
-            if echo:
-                print(f"{_id} - {title}")
-            rows.append({"id": _id, "title": title})
+        rows: list[dict[str, int | str]] = [
+            dict(row) for row in self.cursor.execute(q)
+        ]
         return rows
 
-    def read_all(
-        self, nostatus: bool = False, echo: bool = True
-    ) -> list[dict[str, int | str]]:
+    def read_all(self) -> list[dict[str, int | str]]:
+        """Reads all rows from the database that aren't set to deleted"""
 
-        rows: list[dict[str, int | str]] = []
-        for _id, title, watched in self.cursor.execute(
-            f"""
-                SELECT id, title, watched
-                FROM "{self._table}"
-                WHERE deleted = 0
-                ORDER BY id DESC
-            """
-        ):
-            if echo:
-                if nostatus:
-                    print(f"{_id} - {title}")
-                else:
-                    print(
-                        f"{_id} - {title} "
-                        f"[{'WATCHED' if watched else 'UNWATCHED'}]"
-                    )
-            rows.append({"id": _id, "title": title})
+        q: str = f"""
+            SELECT id, title, watched, path
+            FROM "{self._table}"
+            WHERE deleted = 0
+            AND is_collection = 0
+            ORDER BY id DESC
+        """
+
+        rows: list[dict[str, int | str]] = [
+            dict(row) for row in self.cursor.execute(q)
+        ]
         return rows
 
-    def read_one(
-        self, id: int, echo: bool = True
-    ) -> list[dict[str, int | str]]:
+    def read_one(self, id: int) -> dict[str, int | str]:
+        """Queries the database for the row with id == id"""
 
         row = self.cursor.execute(
             f"""
@@ -116,13 +200,9 @@ class DbPlMpv:
         ).fetchone()
 
         if row:
-            _id, title = row
-            if echo:
-                print(f"{_id} - {title}")
-            return [{"id": _id, "title": title}]
+            return dict(row)
         else:
-            print("Error: Not found")
-            return [{"id": 0, "title": ""}]
+            return {}
 
     @staticmethod
     def _get_where(ids: tuple[int, ...]) -> str:
@@ -131,9 +211,7 @@ class DbPlMpv:
         return f"WHERE id = {ids[0]}"
 
     def delete(self, ids: tuple[int, ...]) -> None:
-
         if ids:
-
             self.cursor.execute(
                 f"""
                     UPDATE {self._table}
