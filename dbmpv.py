@@ -12,6 +12,7 @@ def _get_args() -> Namespace:
     ARGUMENTS:
         dbfile: str -> The sqlite database file, required
         table: str -> Table name on the database, required
+        collection_table: str -> name of the collection table in the database, required
     OPTIONS:
         -c, --create: str -> Title of the row to be created
         -d, --desc: bool -> Descending order
@@ -57,7 +58,11 @@ def _get_args() -> Namespace:
 def main() -> None:
     args: Namespace = _get_args()
 
-    db = DbPlMpv(table_name=args.table, db_file=args.dbfile)
+    db = DbPlMpv(
+        table_name=args.table,
+        collection_table_name=args.collection_table,
+        db_file=args.dbfile,
+    )
 
     with db.conn:
         watched = int(args.watched)

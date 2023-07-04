@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import sqlite3
-import os
 
 
 class DbPlMpv:
@@ -11,12 +10,12 @@ class DbPlMpv:
     def __init__(
         self,
         table_name: str,
+        collection_table_name: str,
         db_file: str,
-        base_dir: str = f"{os.environ['HOME']}/Media/Videos",
     ):
         self._table = table_name
+        self._collection_table = collection_table_name
         self._db = db_file
-        self.base_dir = base_dir.rstrip("/")
         self.conn = sqlite3.connect(self._db)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
@@ -28,11 +27,12 @@ class DbPlMpv:
         collection: bool = False,
         commit: bool = True,
     ) -> None:
-        """Creates a row in the database"""
+        """Creates one or more rows in the database"""
 
         entry_path: Path = Path(entry)
 
         if not collection:
+            """It's not a collection and must insert a single row"""
             q: str = f"""
                 INSERT INTO {self._table}
                 (title, watched, path)
@@ -52,77 +52,58 @@ class DbPlMpv:
             many seasons
             """
 
-            values_to_insert: list[tuple[str, str, str]] = [
-                # Makes sure to add the entry_path without checks, we can mark
-                # it as watched later if the folder is empty
-                (
-                    str(entry_path.name),
-                    str(entry_path),
-                    str(1),
-                )
-            ]
+            values_to_insert: list[tuple[str, str, str]] = []
 
-            collection__contents: list[Path] = sorted(
-                entry_path.iterdir(), key=lambda p: p.name
+            VIDEO_EXTENSIONS: tuple[str, str, str] = (
+                ".mkv",
+                ".mp4",
+                ".webm",
             )
 
-            collection_other_parents: list[Path] = []
-
-            def add_path(p: Path):
+            def insert_collection(
+                path: Path, parent_collection_id: int | None
+            ) -> int | None:
+                q: str = f"""
+                    INSERT INTO {self._collection_table}
+                    (title, parent_collection_id)
+                    VALUES (?, ?)
                 """
-                If p.is_dir() then appends to collection_other_parents or a
-                row to rows_to_insert
-                """
+                self.cursor.execute(q, (str(path.name), parent_collection_id))
+                return self.cursor.lastrowid
 
-                is_collection: int = int(p.is_dir())
-
-                video_extensions: tuple[str, str, str] = (
-                    ".mkv",
-                    ".mp4",
-                    ".webm",
-                )
-
-                there_is_any_video_in_the_collection: bool = (
-                    any(
-                        f.suffix.lower() in video_extensions
-                        for f in p.glob("*")
+            def crawl(path: Path, collection_id: int | None = None):
+                if path.is_dir():
+                    inner_collection_id = insert_collection(
+                        path, collection_id
                     )
-                    if is_collection
-                    else False
-                )
+                    # Recurse
+                    for p in sorted(path.iterdir(), key=lambda _p: _p.name):
+                        crawl(p, inner_collection_id)
 
-                if is_collection and there_is_any_video_in_the_collection:
-                    collection_other_parents.append(p)
-                elif p.suffix.lower() in video_extensions:
-                    # If it's a collection (and it's not empty) or is a video file, adds to rows
-                    # row => (title, path, is_collection)
+                elif (
+                    path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS
+                ):
+                    # row => (title, path, collection_id)
                     values_to_insert.append(
                         (
-                            str(p.name),  # title
-                            str(p),  # path
-                            str(is_collection),  # is_collection
+                            str(path.name),  # title
+                            str(path),  # path
+                            str(collection_id),  # collection_id
                         )
                     )
 
-            for p in collection__contents:
-                # Appends directories to collection_other_parents or rows to
-                # rows_to_insert
-                add_path(p)
+            collection_id: int | None = insert_collection(entry_path, None)
+            for path in sorted(entry_path.iterdir(), key=lambda p: p.name):
+                crawl(path, collection_id)
 
-            while collection_other_parents:
-                # Loops throught until there's no more directories
-                other_parent: Path = collection_other_parents.pop()
+            if values_to_insert:
+                q: str = f"""
+                    INSERT INTO {self._table}
+                    (title, watched, path, collection_id)
+                    VALUES (?, {watched}, ?, ?)
+                """
 
-                for p in other_parent.iterdir():
-                    add_path(p)
-
-            q: str = f"""
-                INSERT INTO {self._table}
-                (title, watched, path, is_collection)
-                VALUES (?, {watched}, ?, ?)
-            """
-
-            self.cursor.executemany(q, values_to_insert)
+                self.cursor.executemany(q, values_to_insert)
 
         if commit:
             self.commit()
@@ -161,7 +142,7 @@ class DbPlMpv:
                 FROM "{self._table}"
                 WHERE watched = {watched}
                 AND deleted = 0
-                AND is_collection = 0
+                AND collection_id = NULL
         """
 
         if desc:
@@ -179,7 +160,7 @@ class DbPlMpv:
             SELECT id, title, watched, path
             FROM "{self._table}"
             WHERE deleted = 0
-            AND is_collection = 0
+            AND collection_id = NULL
             ORDER BY id DESC
         """
 

@@ -12,6 +12,10 @@ def get_args() -> tuple[dict[str, Any], ...]:
             "help": "The table name on the dbfile. required",
         },
         {
+            "arg": ("collection_table",),
+            "help": "The table name on the dbfile. required",
+        },
+        {
             "arg": ("-c", "--create"),
             "help": "Create row with the argument passed as title",
             "action": "store",
