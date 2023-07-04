@@ -142,14 +142,14 @@ class DbPlMpv:
                 FROM "{self._table}"
                 WHERE watched = {watched}
                 AND deleted = 0
-                AND collection_id = NULL
+                AND collection_id IS NULL
         """
 
         if desc:
             q += "ORDER BY id DESC"
 
         rows: list[dict[str, int | str]] = [
-            dict(row) for row in self.cursor.execute(q)
+            dict(row) for row in self.cursor.execute(q).fetchall()
         ]
         return rows
 
@@ -160,12 +160,12 @@ class DbPlMpv:
             SELECT id, title, watched, path
             FROM "{self._table}"
             WHERE deleted = 0
-            AND collection_id = NULL
+            AND collection_id IS NULL
             ORDER BY id DESC
         """
 
         rows: list[dict[str, int | str]] = [
-            dict(row) for row in self.cursor.execute(q)
+            dict(row) for row in self.cursor.execute(q).fetchall()
         ]
         return rows
 
@@ -184,6 +184,50 @@ class DbPlMpv:
             return dict(row)
         else:
             return {}
+
+    def _collection_query(
+        self, collection_is: str
+    ) -> str:
+        return f"""
+            SELECT id, title
+            FROM "{self._collection_table}"
+            WHERE deleted = 0
+            AND parent_collection_id {collection_is}
+            ORDER BY id ASC
+        """
+
+    def read_parent_collections(self) -> list[dict[str, int | str]]:
+        q: str = self._collection_query(collection_is="IS NULL")
+        rows: list[dict[str, int | str]] = [
+            dict(row) for row in self.cursor.execute(q).fetchall()
+        ]
+        return rows
+
+    def read_inner_collection(
+        self, collection_id: int
+    ) -> list[dict[str, int | str]]:
+        q: str = self._collection_query(collection_is="= ?")
+        rows: list[dict[str, int | str]] = [
+            dict(row)
+            for row in self.cursor.execute(q, (collection_id,)).fetchall()
+        ]
+        return rows
+
+    def read_collection(
+        self, collection_id: int
+    ) -> list[dict[str, int | str]]:
+        q: str = f"""
+            SELECT id, title, watched, path
+            FROM "{self._table}"
+            WHERE deleted = 0
+            AND collection_id = ?
+            ORDER BY id ASC
+        """
+        rows: list[dict[str, int | str]] = [
+            dict(row)
+            for row in self.cursor.execute(q, (collection_id,)).fetchall()
+        ]
+        return rows
 
     @staticmethod
     def _get_where(ids: tuple[int, ...]) -> str:

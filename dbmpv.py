@@ -4,20 +4,40 @@ from cli_args import get_args
 from dbplmpv import DbPlMpv
 from pathlib import Path
 
+import json
+import os
+
+
+class ConfigFileNotFoundError(Exception):
+    pass
+
+
+def _get_connection() -> DbPlMpv:
+    CONFIG_FILE: str = f"{os.environ['HOME']}/.config/dbmpv.json"
+    if not Path(CONFIG_FILE).is_file():
+        raise ConfigFileNotFoundError(
+            "You need to have the config file with keys DB_FILE, "
+            "TABLE_NAME and COLLECTION_TABLE_NAME"
+        )
+    with open(CONFIG_FILE, "r") as config_fh:
+        config: Namespace = Namespace(**json.load(config_fh))
+
+    return DbPlMpv(
+        table_name=config.TABLE_NAME,
+        collection_table_name=config.COLLECTION_TABLE_NAME,
+        db_file=config.DB_FILE,
+    )
+
 
 def _get_args() -> Namespace:
     """
     Builds and returns main's parsed command line arguments
 
-    ARGUMENTS:
-        dbfile: str -> The sqlite database file, required
-        table: str -> Table name on the database, required
-        collection_table: str -> name of the collection table in the database, required
     OPTIONS:
         -c, --create: str -> Title of the row to be created
         -d, --desc: bool -> Descending order
         -i, --id: int -> Row id
-        -n, --nostatus: bool -> Prints only row title without watched status
+        -s, --withstatus: bool -> Prints row with watched status
         -p, --path: str -> The folder where the video files are stored
         -r, --read: bool -> Reads one line if id is passed or multiple rows by
                             watched status
@@ -58,11 +78,7 @@ def _get_args() -> Namespace:
 def main() -> None:
     args: Namespace = _get_args()
 
-    db = DbPlMpv(
-        table_name=args.table,
-        collection_table_name=args.collection_table,
-        db_file=args.dbfile,
-    )
+    db: DbPlMpv = _get_connection()
 
     with db.conn:
         watched = int(args.watched)
@@ -84,13 +100,29 @@ def main() -> None:
             if args.id:
                 row = db.read_one(id=args.id)
                 if row:
-                    print(row)
+                    print(Namespace(**row))
             else:
-                for row in db.read_filtered(watched=watched, desc=args.desc):
-                    print(row)
+                rows: list[Namespace] = [
+                    Namespace(**row)
+                    for row in db.read_filtered(
+                        watched=watched, desc=args.desc
+                    )
+                ]
+                for row in rows:
+                    formatted_row: str = f"{row.id} - {row.title}"
+                    if args.withstatus:
+                        formatted_row += " [WATCHED]" if row.watched else ""
+                    print(formatted_row)
         elif args.readall:
-            for row in db.read_all():
-                print(row)
+            rows: list[Namespace] = [
+                Namespace(**row)
+                for row in db.read_all()
+            ]
+            for row in rows:
+                formatted_row: str = f"{row.id} - {row.title}"
+                if args.withstatus:
+                    formatted_row += " [WATCHED]" if row.watched else ""
+                print(formatted_row)
         elif args.update:
             db.update_watched(id=args.id)
         else:

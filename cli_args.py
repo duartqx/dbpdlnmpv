@@ -4,18 +4,6 @@ from typing import Any
 def get_args() -> tuple[dict[str, Any], ...]:
     return (
         {
-            "arg": ("dbfile",),
-            "help": "The sqlite database file to be read. required",
-        },
-        {
-            "arg": ("table",),
-            "help": "The table name on the dbfile. required",
-        },
-        {
-            "arg": ("collection_table",),
-            "help": "The table name on the dbfile. required",
-        },
-        {
             "arg": ("-c", "--create"),
             "help": "Create row with the argument passed as title",
             "action": "store",
@@ -37,7 +25,7 @@ def get_args() -> tuple[dict[str, Any], ...]:
             "type": int,
         },
         {
-            "arg": ("-n", "--nostatus"),
+            "arg": ("-s", "--withstatus"),
             "help": "Print only the title",
             "action": "store_true",
         },
