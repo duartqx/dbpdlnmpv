@@ -1,5 +1,8 @@
+from argparse import Namespace
 from pathlib import Path
 
+import json
+import os
 import sqlite3
 
 
@@ -180,14 +183,9 @@ class DbPlMpv:
             """
         ).fetchone()
 
-        if row:
-            return dict(row)
-        else:
-            return {}
+        return dict(row) if row else {}
 
-    def _collection_query(
-        self, collection_is: str
-    ) -> str:
+    def _collection_query(self, collection_is: str) -> str:
         return f"""
             SELECT id, title
             FROM "{self._collection_table}"
@@ -253,3 +251,24 @@ class DbPlMpv:
     def close(self) -> None:
         """Closes the database connection"""
         return self.conn.close()
+
+
+class ConfigFileNotFoundError(Exception):
+    pass
+
+
+def get_connection() -> DbPlMpv:
+    CONFIG_FILE: str = f"{os.environ['HOME']}/.config/dbmpv.json"
+    if not Path(CONFIG_FILE).is_file():
+        raise ConfigFileNotFoundError(
+            "You need to have the config file with keys DB_FILE, "
+            "TABLE_NAME and COLLECTION_TABLE_NAME"
+        )
+    with open(CONFIG_FILE, "r") as config_fh:
+        config: Namespace = Namespace(**json.load(config_fh))
+
+    return DbPlMpv(
+        table_name=config.TABLE_NAME,
+        collection_table_name=config.COLLECTION_TABLE_NAME,
+        db_file=config.DB_FILE,
+    )

@@ -4,6 +4,11 @@ from typing import Any
 def get_args() -> tuple[dict[str, Any], ...]:
     return (
         {
+            "arg": ("-f", "--fifo"),
+            "help": "Starts the script in fifo mode and keeps listening to commands",
+            "action": "store_true",
+        },
+        {
             "arg": ("-c", "--create"),
             "help": "Create row with the argument passed as title",
             "action": "store",
