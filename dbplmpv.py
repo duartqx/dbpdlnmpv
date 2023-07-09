@@ -141,7 +141,7 @@ class DbPlMpv:
         """
 
         q: str = f"""
-                SELECT id, title, path
+                SELECT id, title, watched, path
                 FROM "{self._table}"
                 WHERE watched = {watched}
                 AND deleted = 0
@@ -177,7 +177,7 @@ class DbPlMpv:
 
         row = self.cursor.execute(
             f"""
-                SELECT id, title
+                SELECT id, title, watched, path
                 FROM "{self._table}"
                 WHERE id = {id}
             """
