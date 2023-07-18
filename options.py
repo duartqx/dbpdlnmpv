@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def get_args() -> tuple[dict[str, Any], ...]:
+def get_options() -> tuple[dict[str, Any], ...]:
     return (
         {
             "arg": ("-f", "--fifo"),
