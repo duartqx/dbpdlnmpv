@@ -31,14 +31,11 @@ async def fifo_handler(db: DbPlMpv) -> None:
 
     def fd_is_open(fd: int | None) -> bool:
         """Checks if a file descriptor is open/exists"""
-        if fd is None:
-            return False
         try:
-            os.fstat(fd)
+            os.fstat(fd)  # pyright: ignore
             return True
         except:
-            pass
-        return False
+            return False
 
     input_pipe_path: str = "dbmpv_input_fifo"
     output_pipe_path: str = "dbmpv_output_fifo"
@@ -121,7 +118,7 @@ async def fifo_handler(db: DbPlMpv) -> None:
     except:
         print_exc()
     finally:
-        print(f"CLOSING PIPES {input_pipe_path} / {output_pipe_path}")
+        print(f"CLOSING PIPES: {input_pipe_path} / {output_pipe_path}")
 
         # Closes the input and output named pipes
         if fd_is_open(input_pipe_fd):

@@ -10,18 +10,13 @@ class DbPlMpv:
 
     """Sqlite Pdlnmpv"""
 
-    def __init__(
-        self,
-        table_name: str,
-        collection_table_name: str,
-        db_file: str,
-    ):
-        self._table = table_name
-        self._collection_table = collection_table_name
-        self._db = db_file
-        self.conn = sqlite3.connect(self._db)
+    def __init__(self, config: Namespace):
+        self.base_path: str = config.BASE_PATH
+        self.main_table: str = config.TABLE_NAME
+        self.collection_table: str = config.COLLECTION_TABLE_NAME
+        self.conn: sqlite3.Connection = sqlite3.connect(config.DB_FILE)
         self.conn.row_factory = sqlite3.Row
-        self.cursor = self.conn.cursor()
+        self.__cursor: sqlite3.Cursor = self.conn.cursor()
 
     def create(
         self,
@@ -37,7 +32,7 @@ class DbPlMpv:
         if not collection:
             """It's not a collection and must insert a single row"""
             q: str = f"""
-                INSERT INTO {self._table}
+                INSERT INTO {self.main_table}
                 (title, watched, path)
                 VALUES (?, ?, ?)
             """
@@ -48,7 +43,7 @@ class DbPlMpv:
                 str(entry_path),
             )
 
-            self.cursor.execute(q, title_watched_path_values)
+            self.__cursor.execute(q, title_watched_path_values)
         else:
             """
             If is collection then it means it's a folder that contains one or
@@ -67,12 +62,14 @@ class DbPlMpv:
                 path: Path, parent_collection_id: int | None
             ) -> int | None:
                 q: str = f"""
-                    INSERT INTO {self._collection_table}
+                    INSERT INTO {self.collection_table}
                     (title, parent_collection_id)
                     VALUES (?, ?)
                 """
-                self.cursor.execute(q, (str(path.name), parent_collection_id))
-                return self.cursor.lastrowid
+                self.__cursor.execute(
+                    q, (str(path.name), parent_collection_id)
+                )
+                return self.__cursor.lastrowid
 
             def crawl(path: Path, collection_id: int | None = None):
                 if path.is_dir():
@@ -101,19 +98,19 @@ class DbPlMpv:
 
             if values_to_insert:
                 q: str = f"""
-                    INSERT INTO {self._table}
+                    INSERT INTO {self.main_table}
                     (title, watched, path, collection_id)
                     VALUES (?, {watched}, ?, ?)
                 """
 
-                self.cursor.executemany(q, values_to_insert)
+                self.__cursor.executemany(q, values_to_insert)
 
         if commit:
             self.commit()
 
     def update_watched(self, id: int, commit: bool = True) -> None:
         q: str = f"""
-            UPDATE {self._table}
+            UPDATE {self.main_table}
             SET watched = (
                 CASE
                     WHEN watched = 1
@@ -124,7 +121,7 @@ class DbPlMpv:
             WHERE id = {id}
         """
 
-        self.cursor.execute(q)
+        self.__cursor.execute(q)
 
         if commit:
             self.commit()
@@ -142,7 +139,7 @@ class DbPlMpv:
 
         q: str = f"""
                 SELECT id, title, watched, path
-                FROM "{self._table}"
+                FROM "{self.main_table}"
                 WHERE watched = {watched}
                 AND deleted = 0
                 AND collection_id IS NULL
@@ -152,7 +149,7 @@ class DbPlMpv:
             q += "ORDER BY id DESC"
 
         rows: list[dict[str, int | str]] = [
-            dict(row) for row in self.cursor.execute(q).fetchall()
+            dict(row) for row in self.__cursor.execute(q).fetchall()
         ]
         return rows
 
@@ -161,53 +158,40 @@ class DbPlMpv:
 
         q: str = f"""
             SELECT id, title, watched, path
-            FROM "{self._table}"
+            FROM "{self.main_table}"
             WHERE deleted = 0
             AND collection_id IS NULL
             ORDER BY id DESC
         """
 
         rows: list[dict[str, int | str]] = [
-            dict(row) for row in self.cursor.execute(q).fetchall()
+            dict(row) for row in self.__cursor.execute(q).fetchall()
         ]
         return rows
 
     def read_one(self, id: int) -> dict[str, int | str]:
         """Queries the database for the row with id == id"""
 
-        row = self.cursor.execute(
+        row = self.__cursor.execute(
             f"""
                 SELECT id, title, watched, path
-                FROM "{self._table}"
+                FROM "{self.main_table}"
                 WHERE id = {id}
             """
         ).fetchone()
 
         return dict(row) if row else {}
 
-    def _collection_query(self, collection_is: str) -> str:
-        return f"""
-            SELECT id, title
-            FROM "{self._collection_table}"
+    def read_collections(self) -> list[dict[str, int | str]]:
+        q: str = f"""
+            SELECT id, title, watched, path
+            FROM "{self.collection_table}"
             WHERE deleted = 0
-            AND parent_collection_id {collection_is}
+            AND parent_collection_id = NULL
             ORDER BY id ASC
         """
-
-    def read_parent_collections(self) -> list[dict[str, int | str]]:
-        q: str = self._collection_query(collection_is="IS NULL")
         rows: list[dict[str, int | str]] = [
-            dict(row) for row in self.cursor.execute(q).fetchall()
-        ]
-        return rows
-
-    def read_inner_collection(
-        self, collection_id: int
-    ) -> list[dict[str, int | str]]:
-        q: str = self._collection_query(collection_is="= ?")
-        rows: list[dict[str, int | str]] = [
-            dict(row)
-            for row in self.cursor.execute(q, (collection_id,)).fetchall()
+            dict(row) for row in self.__cursor.execute(q).fetchall()
         ]
         return rows
 
@@ -215,15 +199,41 @@ class DbPlMpv:
         self, collection_id: int
     ) -> list[dict[str, int | str]]:
         q: str = f"""
-            SELECT id, title, watched, path
-            FROM "{self._table}"
-            WHERE deleted = 0
-            AND collection_id = ?
-            ORDER BY id ASC
+            SELECT *
+            FROM (
+                SELECT
+                    id,
+                    title,
+                    watched,
+                    path,
+                    "{self.main_table}" AS source,
+                    collection_id
+                FROM "{self.main_table}"
+                WHERE collection_id = ?
+                AND watched = 0
+                AND deleted = 0
+
+                UNION
+
+                SELECT
+                    id,
+                    title,
+                    watched,
+                    COALESCE(path, '{self.base_path}' || title) AS path,
+                    "{self.collection_table}" AS source,
+                    parent_collection_id AS collection_id
+                FROM "{self.collection_table}"
+                WHERE parent_collection_id = ?
+                AND watched = 0
+                AND deleted = 0
+
+            ) AS result;
         """
         rows: list[dict[str, int | str]] = [
             dict(row)
-            for row in self.cursor.execute(q, (collection_id,)).fetchall()
+            for row in self.__cursor.execute(
+                q, (collection_id, collection_id)
+            ).fetchall()
         ]
         return rows
 
@@ -235,9 +245,9 @@ class DbPlMpv:
 
     def delete(self, ids: tuple[int, ...]) -> None:
         if ids:
-            self.cursor.execute(
+            self.__cursor.execute(
                 f"""
-                    UPDATE {self._table}
+                    UPDATE {self.main_table}
                     SET deleted = 1
                     {self._get_where(ids)}
                 """
@@ -256,19 +266,24 @@ class DbPlMpv:
 class ConfigFileNotFoundError(Exception):
     pass
 
+CONFIG_NOT_FOUND_MSG: str = """$HOME/.config/dbmpv.json not found!
+
+Sample config:
+
+    {
+        "BASE_PATH": "$HOME/Videos",
+        "DB_FILE": "$HOME/.config/mydb.db",
+        "TABLE_NAME": "mymaintable",
+        "COLLECTION_TABLE_NAME": "mycollectiontablename"
+    }
+
+"""
 
 def get_connection() -> DbPlMpv:
     CONFIG_FILE: str = f"{os.environ['HOME']}/.config/dbmpv.json"
     if not Path(CONFIG_FILE).is_file():
-        raise ConfigFileNotFoundError(
-            "You need to have the config file with keys DB_FILE, "
-            "TABLE_NAME and COLLECTION_TABLE_NAME"
-        )
+        raise ConfigFileNotFoundError(CONFIG_NOT_FOUND_MSG)
     with open(CONFIG_FILE, "r") as config_fh:
         config: Namespace = Namespace(**json.load(config_fh))
 
-    return DbPlMpv(
-        table_name=config.TABLE_NAME,
-        collection_table_name=config.COLLECTION_TABLE_NAME,
-        db_file=config.DB_FILE,
-    )
+    return DbPlMpv(config=config)
