@@ -266,6 +266,7 @@ class DbPlMpv:
 class ConfigFileNotFoundError(Exception):
     pass
 
+
 CONFIG_NOT_FOUND_MSG: str = """$HOME/.config/dbmpv.json not found!
 
 Sample config:
@@ -278,6 +279,7 @@ Sample config:
     }
 
 """
+
 
 def get_connection() -> DbPlMpv:
     CONFIG_FILE: str = f"{os.environ['HOME']}/.config/dbmpv.json"

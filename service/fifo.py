@@ -5,7 +5,9 @@ from persistence.dbplmpv import DbPlMpv
 from .cli import read_filtered, read_all, update
 
 FifoContext: TypeAlias = dict[str, Union[int, bool, str]]
-FifoCoroutine: TypeAlias = Callable[[DbPlMpv, dict[str, Any]], Coroutine[Any, Any, str]]
+FifoCoroutine: TypeAlias = Callable[
+    [DbPlMpv, FifoContext], Coroutine[Any, Any, str]
+]
 
 
 async def fifo_read_filtered(db: DbPlMpv, context: FifoContext) -> str:
@@ -15,7 +17,7 @@ async def fifo_read_filtered(db: DbPlMpv, context: FifoContext) -> str:
 
 async def fifo_read_all(db: DbPlMpv, context: FifoContext) -> str:
     """Reads all rows in the database and returns a formated string"""
-    return await read_all(db, withstatus=bool(context["withstatus"]))
+    return await read_all(db, withstatus=bool(context.get("withstatus")))
 
 
 async def fifo_update(db: DbPlMpv, context: FifoContext) -> str:
@@ -31,10 +33,12 @@ async def blank(db: DbPlMpv, context: FifoContext) -> str:
     return ""
 
 
+CALLBACK_DICT: dict[str, FifoCoroutine] = {
+    "read": fifo_read_filtered,
+    "readall": fifo_read_all,
+    "update": fifo_update,
+}
+
+
 def get_coroutine(command: str) -> FifoCoroutine:
-    callback_dict = {
-        "read": fifo_read_filtered,
-        "readall": fifo_read_all,
-        "update": fifo_update,
-    }
-    return callback_dict.get(command, blank)
+    return CALLBACK_DICT.get(command, blank)
