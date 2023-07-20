@@ -1,12 +1,20 @@
 import asyncio
 import json
+import logging
 import os
+import sys
 
 from traceback import print_exc
 from typing import Any
 
 from persistence.dbplmpv import DbPlMpv
 from service import get_coroutine, FifoContext, FifoCoroutine
+
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,
+    format="%(levelname)s @ %(asctime)s - %(message)s"
+)
 
 
 async def fifo_handler(db: DbPlMpv) -> None:
@@ -45,8 +53,8 @@ async def fifo_handler(db: DbPlMpv) -> None:
             os.remove(path)
         os.mkfifo(path)
 
-    print(f"LISTENING TO: {input_pipe_path}")
-    print(f"WRITING TO: {output_pipe_path}")
+    logging.info(f"LISTENING TO: {input_pipe_path}")
+    logging.info(f"WRITING TO: {output_pipe_path}")
 
     input_pipe_fd = os.open(input_pipe_path, os.O_RDONLY | os.O_NONBLOCK)
     output_pipe_fd: int | None = None
@@ -67,21 +75,21 @@ async def fifo_handler(db: DbPlMpv) -> None:
             try:
                 request: dict[str, Any] = json.loads(data)
             except json.JSONDecodeError as e:
-                print(f"JSONDecodeError: {e}")
+                logging.error(f"JSONDecodeError: {e}")
                 continue
 
             command: str = request.get("command", "")
 
             if not command:
-                print(f"COMMAND: NOT FOUND")
+                logging.warning(f"COMMAND: NOT FOUND")
                 await asyncio.sleep(0.5)
                 continue
-            if command == "exit":
-                print("COMMAND: exit")
+            elif command == "exit":
+                logging.warning("COMMAND: exit")
                 # Breaks out of the inner loop if receives exit
                 break
 
-            print(f"COMMAND: {command}")
+            logging.info(f"COMMAND: {command}")
 
             context: FifoContext = {
                 "id": int(request.get("id", -1)),
@@ -96,7 +104,7 @@ async def fifo_handler(db: DbPlMpv) -> None:
 
             if response:
                 # Writes the response to the output pipe
-                print(
+                logging.info(
                     f"RESPONSE: Read {output_pipe_path} "
                     f"for result of '{command}' "
                 )
@@ -118,7 +126,7 @@ async def fifo_handler(db: DbPlMpv) -> None:
     except:
         print_exc()
     finally:
-        print(f"CLOSING PIPES: {input_pipe_path} / {output_pipe_path}")
+        logging.info(f"CLOSING PIPES: {input_pipe_path} / {output_pipe_path}")
 
         # Closes the input and output named pipes
         if fd_is_open(input_pipe_fd):
