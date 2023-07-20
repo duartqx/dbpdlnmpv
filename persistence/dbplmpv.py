@@ -11,10 +11,8 @@ class DbPlMpv:
     """Sqlite Pdlnmpv"""
 
     def __init__(self, config: Namespace):
-        self.base_path: str = config.BASE_PATH
-        self.main_table: str = config.TABLE_NAME
-        self.collection_table: str = config.COLLECTION_TABLE_NAME
-        self.conn: sqlite3.Connection = sqlite3.connect(config.DB_FILE)
+        self.config: Namespace = config
+        self.conn: sqlite3.Connection = sqlite3.connect(self.config.DB_FILE)
         self.conn.row_factory = sqlite3.Row
         self.__cursor: sqlite3.Cursor = self.conn.cursor()
 
@@ -32,7 +30,7 @@ class DbPlMpv:
         if not collection:
             """It's not a collection and must insert a single row"""
             q: str = f"""
-                INSERT INTO {self.main_table}
+                INSERT INTO {self.config.TABLE_NAME}
                 (title, watched, path)
                 VALUES (?, ?, ?)
             """
@@ -62,7 +60,7 @@ class DbPlMpv:
                 path: Path, parent_collection_id: int | None
             ) -> int | None:
                 q: str = f"""
-                    INSERT INTO {self.collection_table}
+                    INSERT INTO {self.config.COLLECTION_TABLE_NAME}
                     (title, parent_collection_id)
                     VALUES (?, ?)
                 """
@@ -98,7 +96,7 @@ class DbPlMpv:
 
             if values_to_insert:
                 q: str = f"""
-                    INSERT INTO {self.main_table}
+                    INSERT INTO {self.config.TABLE_NAME}
                     (title, watched, path, collection_id)
                     VALUES (?, {watched}, ?, ?)
                 """
@@ -110,7 +108,7 @@ class DbPlMpv:
 
     def update_watched(self, id: int, commit: bool = True) -> None:
         q: str = f"""
-            UPDATE {self.main_table}
+            UPDATE {self.config.TABLE_NAME}
             SET watched = (
                 CASE
                     WHEN watched = 1
@@ -118,10 +116,10 @@ class DbPlMpv:
                     ELSE 1
                 END
             )
-            WHERE id = {id}
+            WHERE id = ?
         """
 
-        self.__cursor.execute(q)
+        self.__cursor.execute(q, (id,))
 
         if commit:
             self.commit()
@@ -139,7 +137,7 @@ class DbPlMpv:
 
         q: str = f"""
                 SELECT id, title, watched, path
-                FROM "{self.main_table}"
+                FROM "{self.config.TABLE_NAME}"
                 WHERE watched = {watched}
                 AND deleted = 0
                 AND collection_id IS NULL
@@ -158,7 +156,7 @@ class DbPlMpv:
 
         q: str = f"""
             SELECT id, title, watched, path
-            FROM "{self.main_table}"
+            FROM "{self.config.TABLE_NAME}"
             WHERE deleted = 0
             AND collection_id IS NULL
             ORDER BY id DESC
@@ -175,7 +173,7 @@ class DbPlMpv:
         row = self.__cursor.execute(
             f"""
                 SELECT id, title, watched, path
-                FROM "{self.main_table}"
+                FROM "{self.config.TABLE_NAME}"
                 WHERE id = {id}
             """
         ).fetchone()
@@ -185,7 +183,7 @@ class DbPlMpv:
     def read_collections(self) -> list[dict[str, int | str]]:
         q: str = f"""
             SELECT id, title, watched, path
-            FROM "{self.collection_table}"
+            FROM "{self.config.COLLECTION_TABLE_NAME}"
             WHERE deleted = 0
             AND parent_collection_id = NULL
             ORDER BY id ASC
@@ -206,9 +204,9 @@ class DbPlMpv:
                     title,
                     watched,
                     path,
-                    "{self.main_table}" AS source,
+                    "{self.config.TABLE_NAME}" AS source,
                     collection_id
-                FROM "{self.main_table}"
+                FROM "{self.config.TABLE_NAME}"
                 WHERE collection_id = ?
                 AND watched = 0
                 AND deleted = 0
@@ -219,10 +217,10 @@ class DbPlMpv:
                     id,
                     title,
                     watched,
-                    COALESCE(path, '{self.base_path}' || title) AS path,
-                    "{self.collection_table}" AS source,
+                    COALESCE(path, '{self.config.BASE_PATH}' || title) AS path,
+                    "{self.config.COLLECTION_TABLE_NAME}" AS source,
                     parent_collection_id AS collection_id
-                FROM "{self.collection_table}"
+                FROM "{self.config.COLLECTION_TABLE_NAME}"
                 WHERE parent_collection_id = ?
                 AND watched = 0
                 AND deleted = 0
@@ -247,7 +245,7 @@ class DbPlMpv:
         if ids:
             self.__cursor.execute(
                 f"""
-                    UPDATE {self.main_table}
+                    UPDATE {self.config.TABLE_NAME}
                     SET deleted = 1
                     {self._get_where(ids)}
                 """
