@@ -10,12 +10,6 @@ from typing import Any
 from persistence.dbplmpv import DbPlMpv
 from service import get_coroutine, FifoContext, FifoCoroutine
 
-logging.basicConfig(
-    level=logging.INFO,
-    stream=sys.stdout,
-    format="%(levelname)s @ %(asctime)s - %(message)s"
-)
-
 
 async def fifo_handler(db: DbPlMpv) -> None:
     """
@@ -45,6 +39,13 @@ async def fifo_handler(db: DbPlMpv) -> None:
         except:
             return False
 
+    # Log setup
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format="%(levelname)s @ %(asctime)s - %(message)s",
+    )
+
     input_pipe_path: str = "dbmpv_input_fifo"
     output_pipe_path: str = "dbmpv_output_fifo"
 
@@ -65,7 +66,7 @@ async def fifo_handler(db: DbPlMpv) -> None:
             data: str = os.read(input_pipe_fd, 1024).decode().strip()
 
             if data:
-                print("Received a command, parsing it...")
+                logging.info("REQUEST: Received")
 
             if not data:
                 # Sleeps to avoid high cpu usage
