@@ -3,7 +3,6 @@
 
 WATCH_FOLDER="$HOME/Media/Videos"
 DMENU_OPTIONS='Watch
-Watch_Collection
 Update
 Watched
 Add'
@@ -24,8 +23,6 @@ Watch)
 
     # Sets the file to watched
     dbmpv --update --id "${_choice%%-*}"
-    ;;
-Watch_Colletion)
     ;;
 Update)
     _to_update=$(dbmpv --readall --withstatus | dmenu -i -l 20)
