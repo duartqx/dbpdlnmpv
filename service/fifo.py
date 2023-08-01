@@ -33,7 +33,7 @@ async def blank(db: DbPlMpv, context: FifoContext) -> str:
     return ""
 
 
-CALLBACK_DICT: dict[str, FifoCoroutine] = {
+COROUTINE_DICT: dict[str, FifoCoroutine] = {
     "read": fifo_read_filtered,
     "readall": fifo_read_all,
     "update": fifo_update,
@@ -41,4 +41,4 @@ CALLBACK_DICT: dict[str, FifoCoroutine] = {
 
 
 def get_coroutine(command: str) -> FifoCoroutine:
-    return CALLBACK_DICT.get(command, blank)
+    return COROUTINE_DICT.get(command, blank)
