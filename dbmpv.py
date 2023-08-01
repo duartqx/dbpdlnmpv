@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser, Namespace
-from cli_args import get_args
-from dbplmpv import DbPlMpv
-from pathlib import Path
+from handlers import cli_handler, fifo_handler
+
+import asyncio
+
+from options import get_options
+from persistence.dbplmpv import DbPlMpv, get_connection
 
 
-def _get_args() -> Namespace:
+def get_args() -> Namespace:
     """
     Builds and returns main's parsed command line arguments
 
-    ARGUMENTS:
-        dbfile: str -> The sqlite database file, required
-        table: str -> Table name on the database, required
     OPTIONS:
+        -f, --fifo: bool -> Starts the script in fifo mode and listen to commands
         -c, --create: str -> Title of the row to be created
         -d, --desc: bool -> Descending order
         -i, --id: int -> Row id
-        -n, --nostatus: bool -> Prints only row title without watched status
+        -s, --withstatus: bool -> Prints row with watched status
         -p, --path: str -> The folder where the video files are stored
         -r, --read: bool -> Reads one line if id is passed or multiple rows by
                             watched status
@@ -24,16 +25,18 @@ def _get_args() -> Namespace:
         -u, --update: bool -> Updates watched status, requires id to be passed
         -w, --watched: bool -> 0 or 1 to be used when filtering by watched
                                status
+        -C, --collection -> The entry is a collection/season
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
-    for arg in get_args():
+    for arg in get_options():
         parser.add_argument(*arg.pop("arg"), **arg)
 
     args = parser.parse_args()
 
     checker = sum(
         (
+            bool(args.fifo),
             bool(args.create),
             bool(args.read),
             bool(args.readall),
@@ -53,41 +56,17 @@ def _get_args() -> Namespace:
     return args
 
 
-def main() -> None:
+async def main() -> None:
+    db: DbPlMpv = get_connection()
 
-    args: Namespace = _get_args()
-
-    db = DbPlMpv(table_name=args.table, db_file=args.dbfile)
+    args: Namespace = get_args()
 
     with db.conn:
-
-        watched = int(args.watched)
-
-        # Checks if the video file still exists in the playlist folder, if not
-        # then updates its row to deleted=1
-        if (args.read or args.readall) and args.path:
-            db.delete(
-                tuple(
-                    (
-                        int(row["id"])
-                        for row in db.read_all(echo=False)
-                        if not Path(f"{args.path}/{row['title']}").is_file()
-                    )
-                )
-            )
-
-        if args.read:
-            if args.id:
-                db.read_one(id=args.id)
-            else:
-                db.read_filtered(watched=watched, desc=args.desc)
-        elif args.readall:
-            db.read_all(nostatus=args.nostatus)
-        elif args.update:
-            db.update_watched(id=args.id)
+        if args.fifo:
+            await fifo_handler(db=db)
         else:
-            db.create(title=args.create, watched=watched)
+            await cli_handler(db=db, args=args)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

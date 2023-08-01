@@ -1,20 +1,22 @@
 from typing import Any
 
 
-def get_args() -> tuple[dict[str, Any], ...]:
+def get_options() -> tuple[dict[str, Any], ...]:
     return (
         {
-            "arg": ("dbfile",),
-            "help": "The sqlite database file to be read. required",
-        },
-        {
-            "arg": ("table",),
-            "help": "The table name on the dbfile. required",
+            "arg": ("-f", "--fifo"),
+            "help": "Starts the script in fifo mode and keeps listening to commands",
+            "action": "store_true",
         },
         {
             "arg": ("-c", "--create"),
             "help": "Create row with the argument passed as title",
             "action": "store",
+        },
+        {
+            "arg": ("-C", "--collection"),
+            "help": "Create row that is a collection",
+            "action": "store_true",
         },
         {
             "arg": ("-d", "--desc"),
@@ -28,13 +30,9 @@ def get_args() -> tuple[dict[str, Any], ...]:
             "type": int,
         },
         {
-            "arg": ("-n", "--nostatus"),
+            "arg": ("-s", "--withstatus"),
             "help": "Print only the title",
             "action": "store_true",
-        },
-        {
-            "arg": ("-p", "--path"),
-            "help": "The folder where the video files are stored. required",
         },
         {
             "arg": ("-r", "--read"),
