@@ -4,11 +4,6 @@ from typing import Any
 def get_options() -> tuple[dict[str, Any], ...]:
     return (
         {
-            "arg": ("-f", "--fifo"),
-            "help": "Starts the script in fifo mode and keeps listening to commands",
-            "action": "store_true",
-        },
-        {
             "arg": ("-c", "--create"),
             "help": "Create row with the argument passed as title",
             "action": "store",
@@ -50,13 +45,10 @@ def get_options() -> tuple[dict[str, Any], ...]:
             "action": "store_true",
         },
         {
-            "arg": ("-U", "--choose_update"),
-            "help": "Choose and Update watched status",
-            "action": "store_true",
-        },
-        {
             "arg": ("-w", "--watched"),
             "help": "Boolean value",
-            "action": "store_true",
+            "action": "store_const",
+            "const": 1,
+            "default": 0,
         },
     )

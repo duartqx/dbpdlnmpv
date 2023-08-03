@@ -20,7 +20,7 @@ async def execute_dmenu(input_string: str) -> str:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
-    output, _ = process.communicate(input=input_string.encode())
+    output, _ = process.communicate(input=input_string.rstrip("\n").encode())
     return output.decode()
 
 
@@ -28,13 +28,16 @@ async def play_on_mpv(path: str) -> None:
     subprocess.run(["mpv", "--osc", "--fs", path.strip("\n")])
 
 
-async def choose_maybe_play_and_update(db: DbPlMpv, rows: Rows) -> None:
-    chosen: str = await execute_dmenu("\n".join(rows.keys()).rstrip("\n"))
-    chosen_row: dict[str, str | int] = rows.get(chosen.rstrip("\n"), {})
+async def choose_play_and_maybe_update(
+    db: DbPlMpv, rows: Rows, upd: bool = True
+) -> None:
+    chosen: str = await execute_dmenu("\n".join(rows))
+    chosen_row: dict[str, str | int] = rows.get(chosen, {})
     if not chosen_row:
         return
     await play_on_mpv(str(chosen_row["path"]))
-    await update(db, id=int(chosen_row["id"]))
+    if upd:
+        await update(db, id=int(chosen_row["id"]))
 
 
 async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
@@ -47,8 +50,6 @@ async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
 
 
 async def cli_handler(db: DbPlMpv, args: Namespace) -> None:
-    args.watched = int(args.watched)
-
     # Checks if the video file still exists in the playlist folder, if not
     # then updates its row to deleted=1
     if args.read or args.readall:
@@ -64,13 +65,13 @@ async def cli_handler(db: DbPlMpv, args: Namespace) -> None:
 
     if args.read:
         rows: Rows = await read_filtered(db, ctx=args)
-        await choose_maybe_play_and_update(db, rows)
-    elif args.readall:
-        rows: Rows = await read_all(db, withstatus=args.withstatus)
-        await choose_maybe_play_and_update(db, rows)
-    elif args.choose_update:
+        await choose_play_and_maybe_update(db, rows, upd=True)
+    elif args.readall and args.update:
         rows: Rows = await read_all(db, withstatus=True)
         print(await choose_and_update(db, rows))
+    elif args.readall:
+        rows: Rows = await read_all(db, withstatus=args.withstatus)
+        await choose_play_and_maybe_update(db, rows, upd=False)
     elif args.update:
         await update(db, id=args.id)
     elif args.create:

@@ -15,7 +15,7 @@ Watch)
     dbmpv --read
     ;;
 Update)
-    _updated=$(dbmpv --choose_update)
+    _updated=$(dbmpv --readall --update)
     if [[ -n $_updated ]]; then
         notify-send "Updated watched status for $_updated"
     fi
