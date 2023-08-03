@@ -136,11 +136,11 @@ class DbPlMpv:
         """
 
         q: str = f"""
-                SELECT id, title, watched, path
-                FROM "{self.config.TABLE_NAME}"
-                WHERE watched = {watched}
-                AND deleted = 0
-                AND collection_id IS NULL
+            SELECT id, title, watched, path
+            FROM "{self.config.TABLE_NAME}"
+            WHERE watched = {watched}
+            AND deleted = 0
+            AND collection_id IS NULL
         """
 
         if desc:
