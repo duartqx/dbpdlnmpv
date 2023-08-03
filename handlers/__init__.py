@@ -1,2 +1,2 @@
-from .cli import cli_handler  #noqa #pyright: ignore[reportUnusedImport]
-from .fifo import fifo_handler  #noqa #pyright: ignore[reportUnusedImport]
+from .cli_handler import cli_handler  #noqa #pyright: ignore[reportUnusedImport]
+from .fifo_handler import fifo_handler  #noqa #pyright: ignore[reportUnusedImport]

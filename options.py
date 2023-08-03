@@ -50,6 +50,11 @@ def get_options() -> tuple[dict[str, Any], ...]:
             "action": "store_true",
         },
         {
+            "arg": ("-U", "--choose_update"),
+            "help": "Choose and Update watched status",
+            "action": "store_true",
+        },
+        {
             "arg": ("-w", "--watched"),
             "help": "Boolean value",
             "action": "store_true",

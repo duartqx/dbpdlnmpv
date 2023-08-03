@@ -41,6 +41,7 @@ def get_args() -> Namespace:
             bool(args.read),
             bool(args.readall),
             bool(args.update),
+            bool(args.choose_update),
         )
     )
     if not checker or checker > 1:
