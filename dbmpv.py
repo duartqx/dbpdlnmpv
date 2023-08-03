@@ -15,17 +15,17 @@ def get_args() -> Namespace:
     OPTIONS:
         -f, --fifo: bool -> Starts the script in fifo mode and listen to commands
         -c, --create: str -> Title of the row to be created
+        -C, --collection -> The entry is a collection/season
         -d, --desc: bool -> Descending order
         -i, --id: int -> Row id
         -s, --withstatus: bool -> Prints row with watched status
-        -p, --path: str -> The folder where the video files are stored
         -r, --read: bool -> Reads one line if id is passed or multiple rows by
                             watched status
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
+        -U, --choose_update: bool -> Choose and Updates watched status
         -w, --watched: bool -> 0 or 1 to be used when filtering by watched
                                status
-        -C, --collection -> The entry is a collection/season
     """
     parser = ArgumentParser(prog="DbMpv-cli")
 
@@ -47,7 +47,7 @@ def get_args() -> Namespace:
     if not checker or checker > 1:
         parser.error(
             "Illegal usage: One of --create, --read, --readall, "
-            "--update or --delete is required "
+            "--choose_update, --update or --delete is required "
             "but they are mutually exclusive."
         )
 
