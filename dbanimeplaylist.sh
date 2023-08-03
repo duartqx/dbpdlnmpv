@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2086
 
-WATCH_FOLDER="$HOME/Media/Videos"
 DMENU_OPTIONS='Watch
 Update
 Watched
@@ -13,36 +12,17 @@ Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
 
 case "$Choice" in
 Watch)
-    _choice=$(dbmpv --read | dmenu -i -l 20)
-
-    # Exits if no choice was selected
-    [[ -z $_choice ]] && exit
-
-    # Plays the file in fullscreen
-    mpv --fs "$WATCH_FOLDER/${_choice#*- }"
-
-    # Sets the file to watched
-    dbmpv --update --id "${_choice%%-*}"
+    dbmpv --read
     ;;
 Update)
-    _to_update=$(dbmpv --readall --withstatus | dmenu -i -l 20)
-
-    # Exits if no choice was selected
-    [[ -z $_to_update ]] && exit
-
-    # Update
-    dbmpv --update --id "${_to_update%%-*}"
-    notify-send "Updated watched status for $_to_update"
+    _updated=$(dbmpv --choose_update)
+    if [[ -n $_updated ]]; then
+        notify-send "Updated watched status for $_updated"
+    fi
     dbanimeplaylist
     ;;
 Watched)
-    _choice=$(dbmpv --read --watched --desc | dmenu -i -l 20)
-
-    # Exits if no choice was selected
-    [[ -z $_choice ]] && exit
-
-    # Plays the file in fullscreen
-    mpv --fs "$WATCH_FOLDER/${_choice#*- }"
+    dbmpv --read --watched --desc
     ;;
 Add)
     CLIP=$(xclip -selection clipboard -o 2>/dev/null)
