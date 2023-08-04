@@ -21,7 +21,7 @@ async def execute_dmenu(input_string: str) -> str:
         stdout=subprocess.PIPE,
     )
     output, _ = process.communicate(input=input_string.rstrip("\n").encode())
-    return output.decode()
+    return output.decode().rstrip("\n")
 
 
 async def play_on_mpv(path: str) -> None:
@@ -41,8 +41,8 @@ async def choose_play_and_maybe_update(
 
 
 async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
-    chosen: str = await execute_dmenu("\n".join(rows.keys()).rstrip("\n"))
-    chosen_row: dict[str, str | int] = rows.get(chosen.rstrip("\n"), {})
+    chosen: str = await execute_dmenu("\n".join(rows))
+    chosen_row: dict[str, str | int] = rows.get(chosen, {})
     if not chosen_row:
         return ""
     await update(db, id=int(chosen_row["id"]))
