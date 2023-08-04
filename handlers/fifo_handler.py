@@ -1,3 +1,4 @@
+from argparse import Namespace
 import asyncio
 import json
 import logging
@@ -8,7 +9,7 @@ from traceback import print_exc
 from typing import Any
 
 from persistence.dbplmpv import DbPlMpv
-from service import get_coroutine, FifoContext, FifoCoroutine
+from service import get_coroutine, DbPlMpvCoroutine, DbPlMpvResult
 
 
 async def fifo_handler(db: DbPlMpv) -> None:
@@ -92,16 +93,16 @@ async def fifo_handler(db: DbPlMpv) -> None:
 
             logging.info(f"COMMAND: {command}")
 
-            context: FifoContext = {
+            context: Namespace = Namespace(**{
                 "id": int(request.get("id", -1)),
                 "watched": int(request.get("watched", 0)),
                 "desc": bool(request.get("desc", 1)),
                 "withstatus": bool(request.get("withstatus", 0)),
-            }
+            })
 
-            coroutine: FifoCoroutine = get_coroutine(command)
+            coroutine: DbPlMpvCoroutine = get_coroutine(command)
 
-            response: str = await coroutine(db, context)
+            response: DbPlMpvResult = await coroutine(db, context)
 
             if response:
                 # Writes the response to the output pipe
@@ -112,7 +113,7 @@ async def fifo_handler(db: DbPlMpv) -> None:
                 try:
                     output_pipe_fd = os.open(output_pipe_path, os.O_WRONLY)
 
-                    os.write(output_pipe_fd, response.encode())
+                    os.write(output_pipe_fd, str(response).encode())
 
                     await asyncio.sleep(0.5)
                 finally:

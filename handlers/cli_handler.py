@@ -37,7 +37,7 @@ async def choose_play_and_maybe_update(
         return
     await play_on_mpv(str(chosen_row["path"]))
     if upd:
-        await update(db, id=int(chosen_row["id"]))
+        await update(db, ctx=Namespace(**chosen_row))
 
 
 async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
@@ -45,7 +45,7 @@ async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
     chosen_row: dict[str, str | int] = rows.get(chosen, {})
     if not chosen_row:
         return ""
-    await update(db, id=int(chosen_row["id"]))
+    await update(db, ctx=Namespace(**chosen_row))
     return chosen
 
 
@@ -67,13 +67,13 @@ async def cli_handler(db: DbPlMpv, args: Namespace) -> None:
         rows: Rows = await read_filtered(db, ctx=args)
         await choose_play_and_maybe_update(db, rows, upd=True)
     elif args.readall and args.update:
-        rows: Rows = await read_all(db, withstatus=True)
+        rows: Rows = await read_all(db, ctx=args)
         print(await choose_and_update(db, rows))
     elif args.readall:
-        rows: Rows = await read_all(db, withstatus=args.withstatus)
+        rows: Rows = await read_all(db, ctx=args)
         await choose_play_and_maybe_update(db, rows, upd=False)
     elif args.update:
-        await update(db, id=args.id)
+        await update(db, ctx=args)
     elif args.create:
         db.create(
             entry=args.create,
