@@ -28,6 +28,10 @@ async def play_on_mpv(path: str) -> None:
     subprocess.run(["mpv", "--osc", "--fs", path.strip("\n")])
 
 
+async def notify_send(msg: str) -> None:
+    subprocess.run(["notify-send", msg])
+
+
 async def choose_play_and_maybe_update(
     db: DbPlMpv, rows: Rows, upd: bool = True
 ) -> None:
@@ -40,13 +44,13 @@ async def choose_play_and_maybe_update(
         await update(db, ctx=Namespace(**chosen_row))
 
 
-async def choose_and_update(db: DbPlMpv, rows: Rows) -> str:
+async def choose_and_update(db: DbPlMpv, rows: Rows) -> None:
     chosen: str = await execute_dmenu("\n".join(rows))
     chosen_row: dict[str, str | int] = rows.get(chosen, {})
     if not chosen_row:
-        return ""
+        return
     await update(db, ctx=Namespace(**chosen_row))
-    return chosen
+    await notify_send(f"Updated watched status for {chosen}")
 
 
 async def cli_handler(db: DbPlMpv, args: Namespace) -> None:
@@ -68,7 +72,7 @@ async def cli_handler(db: DbPlMpv, args: Namespace) -> None:
         await choose_play_and_maybe_update(db, rows, upd=True)
     elif args.readall and args.update:
         rows: Rows = await read_all(db, ctx=args)
-        print(await choose_and_update(db, rows))
+        await choose_and_update(db, rows)
     elif args.readall:
         rows: Rows = await read_all(db, ctx=args)
         await choose_play_and_maybe_update(db, rows, upd=False)

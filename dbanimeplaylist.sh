@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2086
 
-DMENU_OPTIONS='Watch
-Update
-Watched
-Add'
-
-Choice=$(echo "$DMENU_OPTIONS" | dmenu -i)
+Choice=$(echo -e "Watch\nUpdate\nWatched\nAdd" | dmenu -i)
 
 [[ -z $Choice ]] && exit
 
@@ -15,11 +10,7 @@ Watch)
     dbmpv --read
     ;;
 Update)
-    _updated=$(dbmpv --readall --update)
-    if [[ -n $_updated ]]; then
-        notify-send "Updated watched status for $_updated"
-    fi
-    dbanimeplaylist
+    dbmpv -readall --update --withstatus
     ;;
 Watched)
     dbmpv --read --watched --desc
