@@ -45,6 +45,11 @@ def get_options() -> tuple[dict[str, Any], ...]:
             "action": "store_true",
         },
         {
+            "arg": ("-D", "--delete"),
+            "help": "Deletes a row from disk and sets it to deleted on the db",
+            "action": "store_true",
+        },
+        {
             "arg": ("-w", "--watched"),
             "help": "Boolean value",
             "action": "store_const",

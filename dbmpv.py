@@ -42,6 +42,7 @@ def get_args() -> Namespace:
                             watched status
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
+        -D, --delete: bool -> Deletes from disk and sets deleted in the db
         -w, --watched: const int -> 0 or 1
     """
     parser = ArgumentParser(prog="DbMpv-cli")
