@@ -1,8 +1,6 @@
 from argparse import Namespace
 from pathlib import Path
 
-import json
-import os
 import sqlite3
 
 
@@ -15,6 +13,45 @@ class DbPlMpv:
         self.conn: sqlite3.Connection = sqlite3.connect(self.config.DB_FILE)
         self.conn.row_factory = sqlite3.Row
         self.__cursor: sqlite3.Cursor = self.conn.cursor()
+
+    def insert_collection(
+        self, path: Path, parent_collection_id: int | None
+    ) -> int | None:
+        q: str = f"""
+            INSERT INTO {self.config.COLLECTION_TABLE_NAME}
+            (title, parent_collection_id)
+            VALUES (?, ?)
+        """
+        self.__cursor.execute(q, (str(path.name), parent_collection_id))
+        return self.__cursor.lastrowid
+
+    def crawl(
+        self, path: Path, collection_id: int | None = None
+    ) -> list[tuple[str, str, str]]:
+        VIDEO_EXTENSIONS: tuple[str, str, str] = (
+            ".mkv",
+            ".mp4",
+            ".webm",
+        )
+
+        values: list[tuple[str, str, str]] = []
+
+        if path.is_dir():
+            inner_collection_id = self.insert_collection(path, collection_id)
+            # Recurse
+            for p in sorted(path.iterdir(), key=lambda _p: _p.name):
+                values += self.crawl(p, inner_collection_id)
+
+        elif path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS:
+            # row => (title, path, collection_id)
+            values += [
+                (
+                    str(path.name),  # title
+                    str(path),  # path
+                    str(collection_id),  # collection_id
+                )
+            ]
+        return values
 
     def create(
         self,
@@ -50,49 +87,11 @@ class DbPlMpv:
 
             values_to_insert: list[tuple[str, str, str]] = []
 
-            VIDEO_EXTENSIONS: tuple[str, str, str] = (
-                ".mkv",
-                ".mp4",
-                ".webm",
+            collection_id: int | None = self.insert_collection(
+                entry_path, None
             )
-
-            def insert_collection(
-                path: Path, parent_collection_id: int | None
-            ) -> int | None:
-                q: str = f"""
-                    INSERT INTO {self.config.COLLECTION_TABLE_NAME}
-                    (title, parent_collection_id)
-                    VALUES (?, ?)
-                """
-                self.__cursor.execute(
-                    q, (str(path.name), parent_collection_id)
-                )
-                return self.__cursor.lastrowid
-
-            def crawl(path: Path, collection_id: int | None = None):
-                if path.is_dir():
-                    inner_collection_id = insert_collection(
-                        path, collection_id
-                    )
-                    # Recurse
-                    for p in sorted(path.iterdir(), key=lambda _p: _p.name):
-                        crawl(p, inner_collection_id)
-
-                elif (
-                    path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS
-                ):
-                    # row => (title, path, collection_id)
-                    values_to_insert.append(
-                        (
-                            str(path.name),  # title
-                            str(path),  # path
-                            str(collection_id),  # collection_id
-                        )
-                    )
-
-            collection_id: int | None = insert_collection(entry_path, None)
             for path in sorted(entry_path.iterdir(), key=lambda p: p.name):
-                crawl(path, collection_id)
+                values_to_insert += self.crawl(path, collection_id)
 
             if values_to_insert:
                 q: str = f"""
@@ -259,31 +258,3 @@ class DbPlMpv:
     def close(self) -> None:
         """Closes the database connection"""
         return self.conn.close()
-
-
-class ConfigFileNotFoundError(Exception):
-    pass
-
-
-CONFIG_NOT_FOUND_MSG: str = """$HOME/.config/dbmpv.json not found!
-
-Sample config:
-
-    {
-        "BASE_PATH": "$HOME/Videos",
-        "DB_FILE": "$HOME/.config/mydb.db",
-        "TABLE_NAME": "mymaintable",
-        "COLLECTION_TABLE_NAME": "mycollectiontablename"
-    }
-
-"""
-
-
-def get_connection() -> DbPlMpv:
-    CONFIG_FILE: str = f"{os.environ['HOME']}/.config/dbmpv.json"
-    if not Path(CONFIG_FILE).is_file():
-        raise ConfigFileNotFoundError(CONFIG_NOT_FOUND_MSG)
-    with open(CONFIG_FILE, "r") as config_fh:
-        config: Namespace = Namespace(**json.load(config_fh))
-
-    return DbPlMpv(config=config)
