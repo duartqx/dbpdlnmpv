@@ -60,7 +60,7 @@ def get_options() -> tuple[dict[str, Any], ...]:
     )
 
 
-def get_args() -> Namespace:
+def get_cli_args() -> Namespace:
     """
     Builds and returns main's parsed command line arguments
 

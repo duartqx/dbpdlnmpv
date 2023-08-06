@@ -3,15 +3,15 @@ import os
 from argparse import Namespace
 from typing import Any, TypeAlias, Union
 
-from persistence.dbplmpv import DbPlMpv
-from exec import execute_dmenu, execute_notify_send, execute_mpv
+from models import DbPlMpv
+from .cli_exec import execute_dmenu, execute_notify_send, execute_mpv
 
 DbPlMpvResult: TypeAlias = dict[str, dict[str, Any]]
 Row: TypeAlias = dict[str, str | int]
 Rows: TypeAlias = dict[str, Row]
 
 
-class Service:
+class CliController:
     def __init__(self, db: DbPlMpv, ctx: Namespace) -> None:
         self.db = db
         self.ctx = ctx
