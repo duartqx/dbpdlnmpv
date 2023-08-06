@@ -4,7 +4,7 @@ from argparse import Namespace
 from typing import Any, TypeAlias, Union
 
 from persistence.dbplmpv import DbPlMpv
-from exec.exec import execute_dmenu, execute_notify_send, execute_mpv
+from exec import execute_dmenu, execute_notify_send, execute_mpv
 
 DbPlMpvResult: TypeAlias = dict[str, dict[str, Any]]
 Row: TypeAlias = dict[str, str | int]
