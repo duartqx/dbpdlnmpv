@@ -52,7 +52,11 @@ class CliController:
         return {}
 
     async def choose_row(self, **kwargs) -> Row:
-        rows: Rows = await self.read_filtered()
+        rows: Rows
+        if kwargs.get("all"):
+            rows = await self.read_all()
+        else:
+            rows = await self.read_filtered()
         chosen: str = await execute_dmenu("\n".join(rows))
         if not chosen:
             exit()
@@ -71,14 +75,14 @@ class CliController:
             self.db.update_watched(id=int(chosen_row["id"]))
 
     async def choose_and_update(self, **kwargs) -> None:
-        chosen_row: Row = await self.choose_row()
+        chosen_row: Row = await self.choose_row(all=True)
         self.db.update_watched(id=int(chosen_row["id"]))
         await execute_notify_send(
             f"Updated watched status for {chosen_row['title']}"
         )
 
     async def choose_and_delete(self, **kwargs) -> None:
-        chosen_row: Union[Row, None] = await self.choose_row()
+        chosen_row: Union[Row, None] = await self.choose_row(all=True)
         ask_confirmation_of_deletion: str = await execute_dmenu(
             "Yes\nNo",
             cmd=(
