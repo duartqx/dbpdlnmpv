@@ -18,4 +18,4 @@ async def execute_mpv(path: str) -> None:
 
 
 async def execute_notify_send(msg: str) -> None:
-    subprocess.run(("notify-send", msg))
+    subprocess.run(("send2notify", msg))

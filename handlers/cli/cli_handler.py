@@ -21,13 +21,13 @@ async def cli_handler(db: DbPlMpv, args: Namespace, **kwargs) -> None:
 
     ctr = CliController(db, args)
 
-    if args.read:
+    if args.read and not args.watched:
         await ctr.choose_play_and_maybe_update(upd=True)
     elif args.readall and args.update:
         await ctr.choose_and_update()
     elif args.readall and args.delete:
         await ctr.choose_and_delete()
-    elif args.readall:
+    elif args.readall or (args.read and args.watched):
         await ctr.choose_play_and_maybe_update(upd=False)
     elif args.update:
         await ctr.update()
