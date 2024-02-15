@@ -143,7 +143,10 @@ class DbPlMpv:
         """
 
         if desc:
-            q += "ORDER BY id DESC"
+            q += "ORDER BY title DESC"
+        else:
+            q += "ORDER BY title ASC"
+
 
         rows: list[dict[str, int | str]] = [
             dict(row) for row in self.__cursor.execute(q).fetchall()
@@ -158,7 +161,7 @@ class DbPlMpv:
             FROM "{self.config.TABLE_NAME}"
             WHERE deleted = 0
             AND collection_id IS NULL
-            ORDER BY id DESC
+            ORDER BY title DESC
         """
 
         rows: list[dict[str, int | str]] = [
