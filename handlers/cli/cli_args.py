@@ -51,6 +51,11 @@ def get_options() -> tuple[dict[str, Any], ...]:
             "action": "store_true",
         },
         {
+            "arg": ("-P", "--purge"),
+            "help": "Deletes all rows that the file is not found",
+            "action": "store_true",
+        },
+        {
             "arg": ("-w", "--watched"),
             "help": "Boolean value",
             "action": "store_const",
@@ -75,6 +80,7 @@ def get_cli_args() -> Namespace:
         -R, --readall: bool -> Reads all rows without filter
         -u, --update: bool -> Updates watched status, requires id to be passed
         -D, --delete: bool -> Deletes from disk and sets deleted in the db
+        -P, --purge: bool -> Deletes all rows that the file is not found
         -w, --watched: const int -> 0 or 1
     """
     parser = ArgumentParser(prog="DbMpv-cli")
@@ -89,6 +95,7 @@ def get_cli_args() -> Namespace:
             bool(args.create),
             bool(args.read),
             bool(args.readall),
+            bool(args.purge),
         )
     )
     if not checker or checker > 1:

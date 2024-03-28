@@ -6,19 +6,6 @@ from controllers.cli import CliController
 
 
 async def cli_handler(db: DbPlMpv, args: Namespace, **kwargs) -> None:
-    # Checks if the video file still exists in the playlist folder, if not
-    # then updates its row to deleted=1
-    if args.read or args.readall:
-        db.delete(
-            tuple(
-                (
-                    int(row["id"])
-                    for row in db.read_all()
-                    if not Path(f"{row['path']}").is_file()
-                )
-            )
-        )
-
     ctr = CliController(db, args)
 
     if args.read and not args.watched:
@@ -36,4 +23,14 @@ async def cli_handler(db: DbPlMpv, args: Namespace, **kwargs) -> None:
             entry=args.create,
             collection=args.collection,
             watched=args.watched,
+        )
+    elif args.purge:
+        db.delete(
+            tuple(
+                (
+                    int(row["id"])
+                    for row in db.read_all()
+                    if not Path(f"{row['path']}").is_file()
+                )
+            )
         )
