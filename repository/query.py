@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Optional
 
 
@@ -12,7 +12,7 @@ class AnimeQueryOrder:
 class AnimeQuery:
     watched: Optional[bool] = None
     deleted: bool = False
-    order: AnimeQueryOrder = AnimeQueryOrder()
+    order: AnimeQueryOrder = field(default_factory=AnimeQueryOrder)
 
 
 @dataclass

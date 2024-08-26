@@ -1,18 +1,18 @@
 from pathlib import Path
-from typing import override
+from typing import Sequence, override
 
 from domain.entities import Anime
 from repository import Repository
 from repository.query import AnimeQuery
 
-AnimeReadResult = tuple[int, str, str, int, int]
+AnimeQueryResultSet = tuple[int, str, str, int, int]
 
 
 class AnimeRepository(Repository[Anime, AnimeQuery]):
 
     @override
     def insert(self, obj: Anime) -> None:
-        c = self.cursor.execute(
+        cursor = self.execute(
             f"""
             INSERT INTO animeplaylist
             (title, watched, path)
@@ -20,11 +20,11 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
             """,
             {"title": obj.title, "watched": int(obj.watched), "path": obj.path},
         )
-        obj.id = c.lastrowid
+        obj.id = cursor.lastrowid
 
     @override
     def update(self, obj: Anime) -> None:
-        self.cursor.execute(
+        self.execute(
             f"""
             UPDATE animeplaylist
             SET watched = CASE WHEN watched = 1 THEN 0 ELSE 1 END
@@ -32,25 +32,7 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
             """,
             {"id": obj.id},
         )
-
-    @override
-    def get_by_id(self, id: int) -> Anime:
-        title, path, watched, deleted = self.cursor.execute(
-            """
-            SELECT title, path, watched, deleted
-            FROM animeplaylist
-            WHERE id = :id
-            """,
-            {"id": id},
-        ).fetchone()
-
-        return Anime(
-            id=id,
-            title=title,
-            path=Path(path),
-            watched=bool(watched),
-            deleted=bool(deleted),
-        )
+        obj.watched = not obj.watched
 
     @override
     def read(self, query: AnimeQuery = AnimeQuery()) -> list[Anime]:
@@ -73,8 +55,8 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
 
         sql += [f"ORDER BY {query.order.by} {query.order.direction}"]
 
-        results: list[AnimeReadResult] = self.cursor.execute(
-            "".join(sql), params
+        results: list[AnimeQueryResultSet] = self.execute(
+            " ".join(sql), params
         ).fetchall()
 
         return [
@@ -89,18 +71,40 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
         ]
 
     @override
-    def delete(self, ids: tuple[int, ...]) -> int:
-        if not ids:
-            raise ValueError("At least one id is required")
+    def delete(self, objs: Sequence[Anime]) -> int:
+        if not objs:
+            return 0
 
         keys, values = [], {}
-        for i, id in enumerate(ids):
+        for i, obj in enumerate(filter(lambda obj: obj.id, objs)):
             keys.append(f":id_{i}")
-            values[f"id_{i}"] = id
+            values[f"id_{i}"] = obj.id
 
-        cursor = self.cursor.execute(
+        cursor = self.execute(
             f"UPDATE animeplaylist SET deleted = 1 WHERE id in ({','.join(keys)})",
             values,
         )
 
+        for obj in objs:
+            obj.deleted = True
+
         return cursor.rowcount
+
+    @override
+    def get_by_id(self, id: int) -> Anime:
+        title, path, watched, deleted = self.execute(
+            """
+            SELECT title, path, watched, deleted
+            FROM animeplaylist
+            WHERE id = :id
+            """,
+            {"id": id},
+        ).fetchone()
+
+        return Anime(
+            id=id,
+            title=title,
+            path=Path(path),
+            watched=bool(watched),
+            deleted=bool(deleted),
+        )
