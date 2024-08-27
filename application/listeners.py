@@ -1,19 +1,18 @@
-from typing import cast
 from application.registry import registry
-from domain.events import Event, WasCreated, WereDeleted, WasUpdated
-from repository import Repository
+from application.services import notify_send
+from domain.events import WasCreated, WereDeleted, WasUpdated
 
 
 @registry.add(event=WasCreated)
-def was_created_listener(repository: Repository, event: Event) -> None:
-    event = cast(WasCreated, event)
+def was_created_listener(event: WasCreated) -> None:
+    notify_send(f"Created: {event.anime.title}")
 
 
 @registry.add(event=WasUpdated)
-def was_updated_listener(repository: Repository, event: Event) -> None:
-    event = cast(WasUpdated, event)
+def was_updated_listener(event: WasUpdated) -> None:
+    notify_send(f"Updated: {event.anime.title}")
 
 
 @registry.add(event=WereDeleted)
-def was_deleted_listener(repository: Repository, event: Event) -> None:
-    event = cast(WereDeleted, event)
+def was_deleted_listener(event: WereDeleted) -> None:
+    notify_send(f"Deleted: {', '.join(anime.title for anime in event.animes)}")

@@ -1,23 +1,23 @@
-from typing import Callable, Type
+from typing import Callable, Generic, Type, TypeVar
 
 from domain.events import Event
-from repository import Repository
+
+E = TypeVar("E", bound=Event)
+
+Listener = Callable[[E], None]
 
 
-Listener = Callable[[Repository, Event], None]
+class Registry(Generic[E]):
+    _mappings: dict[Type[E], list[Listener]] = {}
 
-
-class Registry:
-    _mappings: dict[Type[Event], list[Listener]] = {}
-
-    def add(self, event: Type[Event]) -> Callable[[Listener], Listener]:
+    def add(self, event: Type[E]) -> Callable[[Listener], Listener]:
         def wrapped(listener: Listener) -> Listener:
             self._mappings.setdefault(event, []).append(listener)
             return listener
 
         return wrapped
 
-    def get(self, event: Type[Event]) -> list[Listener]:
+    def get(self, event: Type[E]) -> list[Listener]:
         return self._mappings.get(event, [])
 
 
