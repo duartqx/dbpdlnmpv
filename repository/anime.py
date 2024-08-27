@@ -18,7 +18,11 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
             (title, watched, path)
             VALUES (:title, :watched, :path)
             """,
-            {"title": obj.title, "watched": int(obj.watched), "path": obj.path},
+            {
+                "title": str(obj.title),
+                "watched": int(obj.watched),
+                "path": str(obj.path),
+            },
         )
         obj.id = cursor.lastrowid
 
