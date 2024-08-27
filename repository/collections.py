@@ -10,7 +10,7 @@ class AnimeCollectionRepository(Repository[AnimeCollection, AnimeCollectionQuery
 
     @override
     def insert(self, obj: AnimeCollection) -> None:
-        c = self.cursor.execute(
+        c = self.execute(
             f"""
             INSERT INTO animeplaylist__collections
             (title, path, parent_collection_id)
@@ -32,13 +32,13 @@ class AnimeCollectionRepository(Repository[AnimeCollection, AnimeCollectionQuery
             SELECT id, title, path, watched
             FROM animeplaylist__collections
             WHERE
-                deleted = 0
+                deleted = :deleted
                 AND parent_collection_id IS NULL
             ORDER BY title ASC
             """
         return [
             AnimeCollection(id=id, title=title, path=Path(path), watched=bool(watched))
-            for id, title, path, watched in self.cursor.execute(sql).fetchall()
+            for id, title, path, watched in self.execute(sql, {"deleted": 0}).fetchall()
         ]
 
     def crawl(self, obj: Anime | AnimeCollection) -> list[Anime | AnimeCollection]:

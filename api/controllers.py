@@ -1,4 +1,3 @@
-from pathlib import Path
 from application.commands import (
     Index,
     ChooseWatch,

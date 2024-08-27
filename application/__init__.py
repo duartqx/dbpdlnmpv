@@ -14,7 +14,7 @@ class MessageBus:
 
     def handle(self, event: Event):
         for listener in registry.get(event.__class__):
-            listener(self.repository, event)
+            listener(event)
 
 
 bus: Optional[MessageBus] = None
