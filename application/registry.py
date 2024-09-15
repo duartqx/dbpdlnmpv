@@ -12,7 +12,9 @@ class Registry(Generic[E]):
 
     def add(self, event: Type[E]) -> Callable[[Listener], Listener]:
         def wrapped(listener: Listener) -> Listener:
+
             self._mappings.setdefault(event, []).append(listener)
+
             return listener
 
         return wrapped

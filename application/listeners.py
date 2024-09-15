@@ -4,15 +4,22 @@ from domain.events import WasCreated, WereDeleted, WasUpdated
 
 
 @registry.add(event=WasCreated)
-def was_created_listener(event: WasCreated) -> None:
+def notify_was_created(event: WasCreated) -> None:
     notify_send(f"Created: {event.anime.title}")
 
 
 @registry.add(event=WasUpdated)
-def was_updated_listener(event: WasUpdated) -> None:
+def notify_was_updated(event: WasUpdated) -> None:
     notify_send(f"Updated: {event.anime.title}")
 
 
 @registry.add(event=WereDeleted)
-def was_deleted_listener(event: WereDeleted) -> None:
+def delete_from_disk(event: WereDeleted) -> None:
+    for anime in event.animes:
+        if anime.path.is_file():
+            anime.path.unlink(missing_ok=True)
+
+
+@registry.add(event=WereDeleted)
+def notify_were_deleted(event: WereDeleted) -> None:
     notify_send(f"Deleted: {', '.join(anime.title for anime in event.animes)}")
