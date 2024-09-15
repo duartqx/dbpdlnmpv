@@ -54,7 +54,7 @@ class Index(Command[IndexCommands]):
 
 
 @dataclass
-class ChooseWatch(Command[Optional[Anime]]):
+class ChooseAndWatch(Command[Optional[Anime]]):
     watched: bool
     query: AnimeQuery = field(default_factory=AnimeQuery)
 
@@ -87,7 +87,7 @@ class ChooseWatch(Command[Optional[Anime]]):
 
 
 @dataclass
-class ChooseWatchAndUpdate(ChooseWatch):
+class ChooseWatchAndUpdate(ChooseAndWatch):
     query: AnimeQuery = field(default_factory=lambda: AnimeQuery(watched=False))
 
     @override

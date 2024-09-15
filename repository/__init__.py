@@ -9,12 +9,9 @@ Q = TypeVar("Q")
 
 class Repository(ABC, Generic[T, Q]):
 
-    conn: sqlite3.Connection
-    cursor: Optional[sqlite3.Cursor]
-
     def __init__(self, conn: sqlite3.Connection) -> None:
-        self.conn = conn
-        self.cursor = None
+        self.conn: sqlite3.Connection = conn
+        self.cursor: Optional[sqlite3.Cursor] = None
         super().__init__()
 
     def __enter__(self) -> Self:
@@ -34,8 +31,7 @@ class Repository(ABC, Generic[T, Q]):
             self.conn.rollback()
 
         if self.cursor is not None:
-            self.cursor.close()
-            self.cursor = None
+            self.cursor = self.cursor.close()
 
         return False
 
@@ -43,7 +39,6 @@ class Repository(ABC, Generic[T, Q]):
         if self.cursor is None:
             self.cursor = self.conn.cursor()
         return self.cursor.execute(sql, params)
-
 
     @abstractmethod
     def insert(self, obj: T) -> None:

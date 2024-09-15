@@ -1,6 +1,6 @@
 from application.commands import (
     Index,
-    ChooseWatch,
+    ChooseAndWatch,
     ChooseWatchAndUpdate,
     ChooseAndUpdate,
     Delete,
@@ -25,11 +25,11 @@ def index():
 
 
 def watch(watched: bool = False, update: bool = False) -> bool:
-    command = ChooseWatch(watched=watched)
+    command = ChooseAndWatch
     if update:
-        command = ChooseWatchAndUpdate(watched=watched)
+        command = ChooseWatchAndUpdate
 
-    return command.execute() is not None
+    return command(watched=watched).execute() is not None
 
 
 def update() -> int:
