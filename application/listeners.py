@@ -16,7 +16,7 @@ def notify_was_updated(event: WasUpdated) -> None:
 @registry.add(event=WereDeleted)
 def delete_from_disk(event: WereDeleted) -> None:
     for anime in event.animes:
-        if anime.path.is_file():
+        if anime.path.exists():
             anime.path.unlink(missing_ok=True)
 
 

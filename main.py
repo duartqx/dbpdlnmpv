@@ -61,6 +61,7 @@ async def main() -> None:
 if __name__ == "__main__":
     conn = Connection(database=DATABASE)
 
-    bootstrap(repository=AnimeRepository(conn=conn))
+    bus = bootstrap(repository=AnimeRepository(conn=conn))
 
-    asyncio.run(main())
+    with bus:
+        asyncio.run(main())

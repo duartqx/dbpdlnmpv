@@ -1,4 +1,5 @@
-from typing import Optional
+from queue import Queue
+from typing import Optional, Self
 
 from application.registry import registry, Registry
 from application.listeners import *
@@ -7,11 +8,22 @@ from repository import Repository
 
 
 class MessageBus:
-    repository: Repository
-
     def __init__(self, repository: Repository, registry: Registry = registry) -> None:
         self.repository = repository
         self.registry = registry
+        self.queue: Queue[Event] = Queue()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        while self.queue.qsize():
+            event = self.queue.get()
+            self.handle(event)
+
+    def add_event(self, event: Event) -> Self:
+        self.queue.put(event)
+        return self
 
     def handle(self, event: Event):
         for listener in self.registry.get(event.__class__):
