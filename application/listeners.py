@@ -1,3 +1,4 @@
+from pathlib import Path
 from application.registry import registry
 from application.services import notify_send
 from domain.events import WasCreated, WereDeleted, WasUpdated
@@ -10,14 +11,24 @@ def notify_was_created(event: WasCreated) -> None:
 
 @registry.add(event=WasUpdated)
 def notify_was_updated(event: WasUpdated) -> None:
-    notify_send(f"Updated: {event.anime.title}")
+    notify_send(f"Watched: {event.anime.title}")
 
 
 @registry.add(event=WereDeleted)
 def delete_from_disk(event: WereDeleted) -> None:
+    def recusively_glob_and_delete(path: Path):
+        if path.is_file():
+            return path.unlink(missing_ok=True)
+
+        for subpath in path.glob("*"):
+
+            recusively_glob_and_delete(subpath)
+
+            subpath.rmdir()
+
     for anime in event.animes:
         if anime.path.exists():
-            anime.path.unlink(missing_ok=True)
+            recusively_glob_and_delete(anime.path)
 
 
 @registry.add(event=WereDeleted)
