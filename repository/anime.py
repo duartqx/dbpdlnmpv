@@ -31,7 +31,10 @@ class AnimeRepository(Repository[Anime, AnimeQuery]):
         self.execute(
             f"""
             UPDATE animeplaylist
-            SET watched = CASE WHEN watched = 1 THEN 0 ELSE 1 END
+            SET watched = CASE
+                WHEN watched = 1 THEN 0
+                ELSE 1
+            END
             WHERE id = :id
             """,
             {"id": obj.id},
