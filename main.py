@@ -47,21 +47,17 @@ def get_args() -> DbMpvArgs:
     return parser.parse_args(namespace=DbMpvArgs())
 
 
-async def main() -> None:
+async def main() -> Any:
     args = get_args()
 
-    with conn:
-        if args.create:
-            for title in args.create:
-                create(Anime(title=title, path=BASEPATH / title))
-        else:
-            index()
+    if not args.create:
+        return index()
+
+    for title in args.create:
+        create(Anime(title=title, path=BASEPATH / title))
 
 
 if __name__ == "__main__":
-    conn = Connection(database=DATABASE)
-
-    bus = bootstrap(repository=AnimeRepository(conn=conn))
-
-    with bus:
-        asyncio.run(main())
+    with Connection(database=DATABASE) as conn:
+        with bootstrap(repository=AnimeRepository(conn=conn)):
+            asyncio.run(main())

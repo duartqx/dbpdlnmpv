@@ -98,7 +98,7 @@ class ChooseWatchAndUpdate(ChooseAndWatch):
             with self.bus.repository as repository:
                 repository.update(obj=anime)
 
-                self.bus.add_event(WasUpdated(anime=anime))
+                WasUpdated(anime=anime)
 
         return anime
 
@@ -130,7 +130,7 @@ class ChooseAndUpdate(Command):
 
                 repository.update(obj=anime)
 
-                self.bus.add_event(WasUpdated(anime=anime))
+                WasUpdated(anime=anime)
 
                 return anime
 
@@ -156,7 +156,7 @@ class Delete(Command):
 
                 repository.delete(objs=anime)
 
-                self.bus.add_event(WereDeleted(animes=anime))
+                WereDeleted(animes=anime)
 
 
 @dataclass
@@ -173,7 +173,7 @@ class Purge(Command):
 
             repository.delete(objs=animes)
 
-            self.bus.add_event(WereDeleted(animes=animes))
+            WereDeleted(animes=animes)
 
 
 @dataclass
@@ -186,6 +186,6 @@ class Create(Command):
 
             repository.insert(self.anime)
 
-            self.bus.add_event(WasCreated(anime=self.anime))
+            WasCreated(anime=self.anime)
 
         return self.anime.id or 0
