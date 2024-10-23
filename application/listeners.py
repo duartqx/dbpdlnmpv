@@ -11,7 +11,12 @@ def notify_was_created(event: WasCreated) -> None:
 
 @registry.add(event=WasUpdated)
 def notify_was_updated(event: WasUpdated) -> None:
-    notify_send(f"Watched: {event.anime.title}")
+    # fmt: off
+    notify_send(
+        f"Updated: {event.anime.title}"
+        f" [Watched]" if event.anime.watched else f""
+    )
+    # fmt: on
 
 
 @registry.add(event=WereDeleted)
