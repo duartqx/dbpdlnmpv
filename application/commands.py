@@ -96,9 +96,10 @@ class ChooseWatchAndUpdate(ChooseAndWatch):
 
         if anime is not None and anime.id is not None:
             with self.bus.repository as repository:
+
                 repository.update(obj=anime)
 
-                self.bus.add_event(WasUpdated(anime=anime))
+                self.bus.add(WasUpdated(anime=anime))
 
         return anime
 
@@ -130,7 +131,7 @@ class ChooseAndUpdate(Command):
 
                 repository.update(obj=anime)
 
-                self.bus.add_event(WasUpdated(anime=anime))
+                self.bus.add(WasUpdated(anime=anime))
 
                 return anime
 
@@ -156,7 +157,7 @@ class Delete(Command):
 
                 repository.delete(objs=anime)
 
-                self.bus.add_event(WereDeleted(animes=anime))
+                self.bus.add(WereDeleted(animes=anime))
 
 
 @dataclass
@@ -173,7 +174,7 @@ class Purge(Command):
 
             repository.delete(objs=animes)
 
-            self.bus.add_event(WereDeleted(animes=animes))
+            self.bus.add(WereDeleted(animes=animes))
 
 
 @dataclass
@@ -186,6 +187,6 @@ class Create(Command):
 
             repository.insert(self.anime)
 
-            self.bus.add_event(WasCreated(anime=self.anime))
+            self.bus.add(WasCreated(anime=self.anime))
 
         return self.anime.id or 0

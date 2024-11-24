@@ -21,7 +21,7 @@ class MessageBus:
             event = self.queue.get()
             self.handle(event)
 
-    def add_event(self, event: Event) -> Self:
+    def add(self, event: Event) -> Self:
         self.queue.put(event)
         return self
 

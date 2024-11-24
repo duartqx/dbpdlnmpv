@@ -19,7 +19,10 @@ def notify_was_updated(event: WasUpdated) -> None:
 
 @registry.add(event=WereDeleted)
 def delete_from_disk(event: WereDeleted) -> None:
-    def recusively_glob_and_delete(path: Path):
+    def recusively_glob_and_delete(path: Path) -> None:
+        if not path.exists():
+            return
+
         if path.is_file():
             return path.unlink(missing_ok=True)
 
@@ -30,8 +33,7 @@ def delete_from_disk(event: WereDeleted) -> None:
             subpath.rmdir()
 
     for anime in event.animes:
-        if anime.path.exists():
-            recusively_glob_and_delete(anime.path)
+        recusively_glob_and_delete(anime.path)
 
 
 @registry.add(event=WereDeleted)
